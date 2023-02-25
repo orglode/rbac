@@ -12,7 +12,7 @@ var (
 
 func Init(s *service.Service, conf *conf.Config) {
 	svc = s
-	r := gin.Default()
-	initRouter(r)
-	r.Run(conf.HttpAddr)
+	rbac := gin.Default()
+	initRouter(rbac)
+	rbac.Run(conf.HttpAddr)
 }
