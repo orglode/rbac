@@ -1,0 +1,9 @@
+env = "test"
+
+http_addr = ":23200"
+#db
+db_master = "root:1995@Zxd@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=true&loc=Local"
+
+
+#redis
+redis_url=""
