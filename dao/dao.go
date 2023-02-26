@@ -26,6 +26,10 @@ func NewDao(conf *conf.Config) *Dao {
 	}
 }
 
+const (
+	roleTable = "role"
+)
+
 // 初始化MySQL连接池
 func initMysqlDb(conf *conf.Config) *gorm.DB {
 	master, err := gorm.Open("mysql", conf.DbMaster)

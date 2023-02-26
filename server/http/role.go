@@ -17,31 +17,34 @@ func roleList(c *gin.Context) {
 }
 
 func roleAdd(c *gin.Context) {
-	req := model.TestAReq{}
+	req := model.Role{}
 	if err := c.ShouldBindQuery(&req); err != nil {
 		fmt.Println("asd")
 	}
-	data, _ := svc.Test(req)
+	data, _ := svc.RoleAdd(req)
 	c.JSON(200, data)
 	return
 }
 
 func roleModify(c *gin.Context) {
-	req := model.TestAReq{}
+	req := model.Role{}
 	if err := c.ShouldBindQuery(&req); err != nil {
 		fmt.Println("asd")
 	}
-	data, _ := svc.Test(req)
+	if req.Id <= 0 {
+		return
+	}
+	data, _ := svc.RoleModify(req)
 	c.JSON(200, data)
 	return
 }
 
 func roleDel(c *gin.Context) {
-	req := model.TestAReq{}
-	if err := c.ShouldBindQuery(&req); err != nil {
-		fmt.Println("asd")
+	id := c.GetInt64("id")
+	if id <= 0 {
+		return
 	}
-	data, _ := svc.Test(req)
+	data, _ := svc.RoleDel(id)
 	c.JSON(200, data)
 	return
 }
