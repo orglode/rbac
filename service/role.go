@@ -8,7 +8,30 @@ import (
 )
 
 func (s *Service) CrmRoleListInfo(req model.RoleListRequest) (interface{}, error) {
+	result := model.RoleListRes{}
+	res, count, err := s.dao.GetCrmRoleList(dao.Paging{
+		Size: req.Size,
+		Page: req.Page,
+	})
+	panic("出发盘点")
+	if err != nil {
+		s.Response.Code = api.SystemErr
+		s.logger.Sugar().Errorf("err :%v", err)
+	}
+	result.List = res
+	result.Total = count
+	s.Response.Data = result
 	return nil, nil
+}
+
+func (s *Service) GetRoleAll() (interface{}, error) {
+	res, err := s.dao.GetRoleAll()
+	if err != nil {
+		s.Response.Code = api.SystemErr
+		s.logger.Sugar().Errorf("err :%v", err)
+	}
+	s.Response.Data = res
+	return s.Response, err
 }
 
 func (s *Service) RoleAdd(req model.RoleRequest) (interface{}, error) {

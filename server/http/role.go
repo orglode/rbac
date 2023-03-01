@@ -15,7 +15,13 @@ func roleList(c *gin.Context) {
 		})
 		return
 	}
-	data, _ := svc.CrmRoleListInfo(req)
+	svc.CrmRoleListInfo(req)
+	c.JSON(http.StatusOK, svc.Response)
+	return
+}
+
+func roleAll(c *gin.Context) {
+	data, _ := svc.GetRoleAll()
 	c.JSON(http.StatusOK, data)
 	return
 }

@@ -19,6 +19,11 @@ type RoleListRequest struct {
 	BaseRequest
 }
 
+type RoleListRes struct {
+	List  interface{} `json:"list"`
+	Total int         `json:"total"`
+}
+
 type RoleTypeListRequest struct {
 	BaseRequest
 }
