@@ -1,13 +1,11 @@
 package dao
 
-import (
-	"github.com/orglode/navigator/model"
-)
+import "github.com/orglode/navigator/model"
 
-func (d *Dao) GetCrmRoleList(p Paging) ([]model.Role, int, error) {
-	res := make([]model.Role, 0)
+func (d *Dao) GetCrmRoleTypeList(p Paging) ([]model.RoleType, int, error) {
+	res := make([]model.RoleType, 0)
 	count := 0
-	db := d.MySqlSlave.Table(roleTable)
+	db := d.MySqlSlave.Table(roleTypeTable)
 	if err := db.Count(&count).Error; err != nil {
 		d.logger.Sugar().Errorf("err :%v", err)
 		return nil, 0, err
@@ -19,9 +17,9 @@ func (d *Dao) GetCrmRoleList(p Paging) ([]model.Role, int, error) {
 	return res, count, nil
 }
 
-func (d *Dao) GetRoleAll() ([]model.Role, error) {
-	res := make([]model.Role, 0)
-	db := d.MySqlSlave.Table(roleTable).Where("status = ?", model.StatusSuccess).Order("id desc").Find(&res)
+func (d *Dao) GetRoleTypeAll() ([]model.RoleType, error) {
+	res := make([]model.RoleType, 0)
+	db := d.MySqlSlave.Table(roleTypeTable).Where("status = ?", model.StatusSuccess).Order("id desc").Find(&res)
 	if db.Error != nil {
 		d.logger.Sugar().Errorf("err:%v", db.Error)
 		return res, db.Error
@@ -29,8 +27,8 @@ func (d *Dao) GetRoleAll() ([]model.Role, error) {
 	return res, nil
 }
 
-func (d *Dao) AddRoleInfo(info model.Role) (int64, error) {
-	db := d.MySqlMaster.Table(roleTable).Create(&info)
+func (d *Dao) AddRoleTypeInfo(info model.RoleType) (int64, error) {
+	db := d.MySqlMaster.Table(roleTypeTable).Create(&info)
 	if db.Error != nil {
 		d.logger.Sugar().Errorf("err:%v", db.Error)
 		return 0, db.Error
@@ -38,8 +36,8 @@ func (d *Dao) AddRoleInfo(info model.Role) (int64, error) {
 	return info.Id, nil
 }
 
-func (d *Dao) ModifyRoleInfo(id int64, info model.Role) (bool, error) {
-	db := d.MySqlMaster.Table(roleTable).Where("id = ?", id).Save(&info)
+func (d *Dao) ModifyRoleTypeInfo(id int64, info model.RoleType) (bool, error) {
+	db := d.MySqlMaster.Table(roleTypeTable).Where("id = ?", id).Updates(&info)
 	if db.RowsAffected <= 0 {
 		return false, nil
 	}
@@ -49,9 +47,9 @@ func (d *Dao) ModifyRoleInfo(id int64, info model.Role) (bool, error) {
 	}
 	return true, nil
 }
-func (d *Dao) DelRoleInfo(id int64) (bool, error) {
-	res := model.Role{}
-	db := d.MySqlMaster.Table(roleTable).Where("id = ?", id).Delete(&res)
+func (d *Dao) DelRoleTypeInfo(id int64) (bool, error) {
+	res := model.RoleType{}
+	db := d.MySqlMaster.Table(roleTypeTable).Where("id = ?", id).Delete(&res)
 	if db.RowsAffected <= 0 {
 		return false, nil
 	}

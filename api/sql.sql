@@ -21,10 +21,9 @@ KEY `sort` (`sort`)
 CREATE TABLE `role_type` (
 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
 `type_name` varchar(30) NOT NULL DEFAULT '' COMMENT '角色类型名称',
-`sign_type` tinyint(4) NOT NULL DEFAULT '0' COMMENT '角色类型标识',
 `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态 1：有效 2：删除',
-`create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-`update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+`create_time` int(11) NOT NULL DEFAULT '0' COMMENT '创建时间',
+`update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
 PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='角色类型表';
 

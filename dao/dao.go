@@ -13,6 +13,7 @@ import (
 type Dao struct {
 	conf        *conf.Config
 	MySqlMaster *gorm.DB
+	MySqlSlave  *gorm.DB
 	Redis       redis.Conn
 	logger      *zap.Logger
 }
@@ -20,19 +21,21 @@ type Dao struct {
 func NewDao(conf *conf.Config) *Dao {
 	return &Dao{
 		conf:        conf,
-		MySqlMaster: initMysqlDb(conf),
+		MySqlMaster: initMysqlDb(conf.DbMaster),
+		MySqlSlave:  initMysqlDb(conf.DbSlave),
 		Redis:       initRedis(conf),
 		logger:      api.InitLogger(),
 	}
 }
 
 const (
-	roleTable = "role"
+	roleTable     = "role"
+	roleTypeTable = "role_type"
 )
 
 // 初始化MySQL连接池
-func initMysqlDb(conf *conf.Config) *gorm.DB {
-	master, err := gorm.Open("mysql", conf.DbMaster)
+func initMysqlDb(dbConf string) *gorm.DB {
+	master, err := gorm.Open("mysql", dbConf)
 	if err != nil {
 		return nil
 	}
@@ -53,4 +56,28 @@ func initRedis(conf *conf.Config) redis.Conn {
 		return nil
 	}
 	return conn
+}
+
+type Paging struct {
+	Page int `json:"page" schema:"page"`
+	Size int `json:"size" schema:"size"`
+}
+
+func (p *Paging) Offset() int {
+	return (p.Page - 1) * p.Size
+}
+
+type TimeRange struct {
+	StartTime int64 `json:"start_time" schema:"start_time"`
+	EndTime   int64 `json:"end_time" schema:"end_time"`
+}
+
+func (t TimeRange) Range(db *gorm.DB, field string) *gorm.DB {
+	if t.StartTime > 0 {
+		db = db.Where(field+" >= ?", time.Unix(t.StartTime, 0))
+	}
+	if t.EndTime > 0 {
+		db = db.Where(field+" <= ?", time.Unix(t.EndTime, 0))
+	}
+	return db
 }

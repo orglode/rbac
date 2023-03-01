@@ -21,12 +21,11 @@ type Module struct {
 
 // 角色类型表
 type RoleType struct {
-	Id         int64     `gorm:"column:id" json:"id"`
-	TypeName   string    `gorm:"column:type_name" json:"type_name"`     //角色类型名称
-	SignType   int8      `gorm:"column:sign_type" json:"sign_type"`     //角色类型标识
-	Status     int8      `gorm:"column:status" json:"status"`           //状态 1：有效 2：删除
-	CreateTime time.Time `gorm:"column:create_time" json:"create_time"` //创建时间
-	UpdateTime time.Time `gorm:"column:update_time" json:"update_time"` //更新时间
+	Id         int64  `gorm:"column:id" json:"id" form:"id"`
+	TypeName   string `gorm:"column:type_name" json:"type_name" form:"type_name"`       //角色类型名称
+	Status     int8   `gorm:"column:status" json:"status" form:"status"`                //状态 1：有效 2：删除
+	CreateTime int64  `gorm:"column:create_time" json:"create_time" form:"create_time"` //创建时间
+	UpdateTime int64  `gorm:"column:update_time" json:"update_time" form:"update_time"` //更新时间
 }
 
 // 角色表（含数据范围）

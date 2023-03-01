@@ -24,6 +24,7 @@ func initRouter(rbac *gin.Engine) {
 
 	//角色类型管理
 	rbac.GET("background/role_type/list", roleTypeList)
+	rbac.GET("background/role_type/all", roleTypeAll)
 	rbac.POST("background/role_type/add", roleTypeAdd)
 	rbac.POST("background/role_type/modify", roleTypeModify)
 	rbac.GET("background/role_type/del", roleTypeDel)
