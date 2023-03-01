@@ -13,7 +13,6 @@ func (s *Service) CrmRoleListInfo(req model.RoleListRequest) (interface{}, error
 		Size: req.Size,
 		Page: req.Page,
 	})
-	panic("出发盘点")
 	if err != nil {
 		s.Response.Code = api.SystemErr
 		s.logger.Sugar().Errorf("err :%v", err)

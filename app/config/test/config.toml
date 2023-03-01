@@ -3,7 +3,7 @@ env = "test"
 http_addr = ":23200"
 #db
 db_master = "root:1995@Zxd@tcp(101.43.152.142:3306)/rbac?charset=utf8mb4&parseTime=true&loc=Local"
-
+db_slave = "root:1995@Zxd@tcp(101.43.152.142:3306)/rbac?charset=utf8mb4&parseTime=true&loc=Local"
 
 #redis
 redis_url=""

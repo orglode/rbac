@@ -17,6 +17,10 @@ type BaseRequest struct {
 }
 
 const (
+	EnvProduction = "production"
+)
+
+const (
 	StatusSuccess = 2
 	StatusFail    = 1
 )
