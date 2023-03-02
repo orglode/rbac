@@ -7,8 +7,9 @@ import (
 func initRouter(rbac *gin.Engine) {
 
 	//页面按钮接口
-	//rbac.POST("background/login", backgroundLogin) //CRM登录
-	//rbac.GET("background/list", backgroundList)    //菜单列表
+	rbac.POST("background/login", backgroundLogin) //CRM登录
+
+	rbac.GET("background/list", backgroundList) //菜单列表
 
 	//用户管理
 	rbac.GET("background/user/list", userList)

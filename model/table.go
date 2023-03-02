@@ -46,8 +46,8 @@ type Role struct {
 // 角色权限映射关系表
 type RoleModule struct {
 	Id       int64 `gorm:"column:id" json:"id"`
-	RoleId   int16 `gorm:"column:role_id" json:"role_id"`     //角色ID
-	ModuleId int   `gorm:"column:module_id" json:"module_id"` //模块id
+	RoleId   int64 `gorm:"column:role_id" json:"role_id"`     //角色ID
+	ModuleId int64 `gorm:"column:module_id" json:"module_id"` //模块id
 }
 
 // 页面分类表

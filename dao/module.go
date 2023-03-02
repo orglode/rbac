@@ -2,6 +2,16 @@ package dao
 
 import "github.com/orglode/navigator/model"
 
+func (d *Dao) GetModuleByIdAll(id []int64) ([]model.Module, error) {
+	res := make([]model.Module, 0)
+	db := d.MySqlSlave.Table(ModuleTable).Where("id in(?) AND status = ?", id, model.StatusSuccess).Find(&res)
+	if db.Error != nil {
+		d.logger.Sugar().Errorf("err:%v", db.Error)
+		return res, db.Error
+	}
+	return res, nil
+}
+
 func (d *Dao) GetModuleAll() ([]model.Module, error) {
 	res := make([]model.Module, 0)
 	db := d.MySqlSlave.Table(ModuleTable).Where("status = ?", model.StatusSuccess).Find(&res)
@@ -43,6 +53,16 @@ func (d *Dao) DelModuleInfo(id int64) (bool, error) {
 		return false, db.Error
 	}
 	return true, nil
+}
+
+func (d *Dao) GetRoleModuleByRoleIdAll(roleId int64) ([]model.RoleModule, error) {
+	res := make([]model.RoleModule, 0)
+	db := d.MySqlSlave.Table(ModuleRoleTable).Where("role_id = ?", roleId).Find(&res)
+	if db.Error != nil {
+		d.logger.Sugar().Errorf("err:%v", db.Error)
+		return res, db.Error
+	}
+	return res, nil
 }
 
 func (d *Dao) AddRoleModuleInfo(info model.RoleModule) (int64, error) {

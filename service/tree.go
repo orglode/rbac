@@ -1,8 +1,8 @@
 package service
 
 type INode interface {
-	GetId() int64
-	GetParent() int64
+	GetId() int
+	GetParent() int
 	GetName() string
 	GetSort() int
 	GetCode() int
@@ -14,8 +14,8 @@ type INode interface {
 type INodes []INode
 
 type SystemMenu struct {
-	Id     int64  `json:"id"`
-	Parent int64  `json:"parent"`
+	Id     int    `json:"id"`
+	Parent int    `json:"parent"`
 	Name   string `json:"name"`
 	Sort   int    `json:"sort"`
 	Code   int    `json:"code"`
@@ -23,10 +23,10 @@ type SystemMenu struct {
 	Root   string `json:"root"`
 }
 
-func (m SystemMenu) GetId() int64 {
+func (m SystemMenu) GetId() int {
 	return m.Id
 }
-func (m SystemMenu) GetParent() int64 {
+func (m SystemMenu) GetParent() int {
 	return m.Parent
 }
 func (m SystemMenu) GetName() string {
@@ -149,7 +149,7 @@ func nodePartialSelected(trees []Tree) bool {
 // allNodes 所有节点
 // node 递归节点
 // t 递归查找类型：0 查找父、子节点；1 只查找父节点；2 只查找子节点
-func recursiveFindRelationNode(nodeMap map[int64]INode, allNodes []INode, node INode, t int) {
+func recursiveFindRelationNode(nodeMap map[int]INode, allNodes []INode, node INode, t int) {
 	nodeMap[node.GetId()] = node
 	for _, v := range allNodes {
 		if _, ok := nodeMap[v.GetId()]; ok {
@@ -180,7 +180,7 @@ func recursiveFindRelationNode(nodeMap map[int64]INode, allNodes []INode, node I
 // nodes 要查询父节点的子节点数组
 // allTree 所有节点数组
 func FindRelationNode(nodes, allNodes []INode) (respNodes []INode) {
-	nodeMap := make(map[int64]INode)
+	nodeMap := make(map[int]INode)
 	for _, v := range nodes {
 		recursiveFindRelationNode(nodeMap, allNodes, v, 0)
 	}

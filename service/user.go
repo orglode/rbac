@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"github.com/orglode/navigator/api"
 	"github.com/orglode/navigator/dao"
 	"github.com/orglode/navigator/model"
@@ -58,7 +57,6 @@ func (s *Service) UserModify(req model.CrmUserRequest) {
 }
 
 func (s *Service) UserDel(id, operatorUid int64) {
-	fmt.Println(operatorUid)
 	row, err := s.dao.DelUserInfo(id)
 	if err != nil {
 		s.logger.Sugar().Errorf("err :%v", err)

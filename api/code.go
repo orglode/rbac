@@ -6,7 +6,9 @@ type Code struct {
 }
 
 var (
-	Success          = &Code{0, "success"}
-	MissingParameter = &Code{499, "缺少参数"}
-	SystemErr        = &Code{500, "服务器错误"}
+	Success           = &Code{0, "success"}
+	MissingParameter  = &Code{499, "缺少参数"}
+	SystemErr         = &Code{500, "服务器错误"}
+	UserNotFindRole   = &Code{1000, "该用户无角色"}
+	RoleNotFindModule = &Code{1000, "该角色未配置权限"}
 )

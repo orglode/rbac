@@ -15,8 +15,8 @@ func (s *Service) GetPageAll() (interface{}, error) {
 	data := make([]SystemMenu, 0)
 	for _, v := range res {
 		temp := SystemMenu{
-			Id:     v.Id,
-			Parent: v.Parent,
+			Id:     int(v.Id),
+			Parent: int(v.Parent),
 			Name:   v.Name,
 			Sort:   v.Sort,
 			Code:   v.Code,
