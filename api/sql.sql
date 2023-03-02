@@ -9,13 +9,44 @@ CREATE TABLE `module` (
 `type` varchar(200) NOT NULL DEFAULT '1' COMMENT '前端区分按钮 页面 1–菜单 2--按钮',
 `root` varchar(200) NOT NULL DEFAULT '' COMMENT '前端路由使用',
 `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '1--启用 2--禁用 3--菜单上不显示',
-`operator_id` int(11) NOT NULL DEFAULT '0' COMMENT '操作者id',
+`operator_uid` int(11) NOT NULL DEFAULT '0' COMMENT '操作者id',
 `operator` varchar(30) NOT NULL COMMENT '操作者',
-`create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-`update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+`create_time` int(11) NOT NULL DEFAULT '0' COMMENT '创建时间',
+`update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
 PRIMARY KEY (`id`),
 KEY `sort` (`sort`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1  DEFAULT CHARSET=utf8 COMMENT='权限模块表';
+
+insert into module (id, name, api_path, parent, sort, code, `type`, `root`, `status`, operator_uid, operator)
+values  (1,'系统管理', '/', 0, 1, 0, '1', 'auth', 1, 0, 'system'),
+        (2,'角色管理', '/', 1, 1, 1, '1', 'roleMs', 1, 0, 'system'),
+        (3,'页面与按钮管理', '/', 1, 1, 2, '1', 'pageButtonMs', 1, 0, 'system'),
+        (4,'用户管理', '/', 1, 1, 1, '1', 'userMs', 1, 0, 'system'),
+        (5,'角色类型管理', '/', 1, 1, 1, '1', 'roleTypeMs', 1, 0, 'system'),
+        (6,'日志管理', '/', 1, 1, 1, '1', 'logMs', 1, 0, 'system'),
+        (7,'新增', '/login/rbac/role/role_modify', 2, 1, 2, '2', '', 1, 0, 'system'),
+        (8,'查询', '/login/rbac/role/role_list', 2, 1, 1, '2', '', 1, 0, 'system'),
+        (9,'编辑', '/login/rbac/role/role_modify', 2, 1, 3, '2', '', 1, 0, 'system'),
+        (10,'新增', '/login/rbac/module/module_modify', 3, 1, 2, '2', '', 1, 0, 'system'),
+        (11,'编辑', '/login/rbac/module/module_modify', 3, 1, 3, '2', '', 1, 0, 'system'),
+        (12,'查询', '/login/rbac/users/user_list', 4, 1, 1, '2', '', 1, 0, 'system'),
+        (13,'新增', '/login/rbac/role/role_type_add', 5, 1, 2, '2', '', 1, 0, 'system'),
+        (14,'查询', '/login/rbac/role/role_type_list', 5, 1, 1, '2', '', 1, 0, 'system'),
+        (15,'编辑', '/login/rbac/users/user_modify', 4, 1, 3, '2', '', 1, 0, 'system'),
+        (16,'新增', '/login/rbac/users/user_modify', 4, 1, 2, '2', '', 1, 0, 'system'),
+        (17,'导出', '/web/op_log/lists', 6, 1, 6, '2', '', 1, 0, 'system'),
+        (18,'查询', '/web/op_log/lists', 6, 1, 1, '2', '', 1, 0, 'system'),
+        (19,'查看明细', '/web/op_log/lists', 6, 1, 4, '2', '', 1, 0, 'system'),
+        (20,'系统初始化', '/', 0, 1, 0, '1', 'authorityInitialization', 1, 0, 'system'),
+        (21,'查询', '/login/rbac/system/lists', 20, 1, 1, '2', '', 1, 0, 'system'),
+        (22,'新增', '/login/rbac/system/add', 20, 1, 2, '2', '', 1, 0, 'system'),
+        (23,'初始化权限', '/login/rbac/module/module_modify', 20, 1, 9, '2', '', 1, 0, 'system'),
+        (24,'初始化账号', '/login/rbac/users/user_modify', 20, 1, 10, '2', '', 1, 0, 'system');
+
+
+
+
+
 
 
 CREATE TABLE `role_type` (
@@ -79,17 +110,18 @@ PRIMARY KEY (`id`),
 
 CREATE TABLE `users` (
 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-`username` varchar(20) NOT NULL DEFAULT '' COMMENT '账号姓名',
-`email` varchar(255) NOT NULL DEFAULT '' COMMENT '账号',
-`phone` varchar(20) NOT NULL DEFAULT '' COMMENT '电话',
+`account` varchar(255) NOT NULL DEFAULT '' COMMENT '账号',
+`pass_word` varchar(255) NOT NULL DEFAULT '' COMMENT '密码',
+`username` varchar(50) NOT NULL DEFAULT '' COMMENT '账号姓名',
+`phone` varchar(50) NOT NULL DEFAULT '' COMMENT '电话',
 `description` varchar(65) NOT NULL DEFAULT '' COMMENT '描述',
 `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态 1:启用 2:禁用',
 `operator` varchar(50) NOT NULL DEFAULT '' COMMENT '操作者',
 `last_login_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最后一次登录时间',
-`create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-`update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+`create_time` int(11) NOT NULL DEFAULT 0 COMMENT '创建时间',
+`update_time` int(11)  NOT NULL DEFAULT 0 COMMENT '更新时间',
 PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1  DEFAULT CHARSET=utf8 COMMENT='系统账号表';
+) ENGINE=InnoDB AUTO_INCREMENT=1  DEFAULT CHARSET=utf8 COMMENT='系统用户表';
 
 
 

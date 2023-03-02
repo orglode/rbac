@@ -31,6 +31,7 @@ func NewDao(conf *conf.Config) *Dao {
 const (
 	roleTable     = "role"
 	roleTypeTable = "role_type"
+	UserTable     = "users"
 )
 
 type Paging struct {

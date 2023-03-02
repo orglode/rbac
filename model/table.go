@@ -76,16 +76,17 @@ type InkeUserRole struct {
 	RoleId int64 `gorm:"column:role_id" json:"role_id"` //角色id
 }
 
-// 系统账号表
+// 系统用户表
 type Users struct {
-	Id            uint      `gorm:"column:id" json:"id"`
-	Username      string    `gorm:"column:username" json:"username"`               //账号姓名
-	Email         string    `gorm:"column:email" json:"email"`                     //账号
-	Phone         string    `gorm:"column:phone" json:"phone"`                     //电话
-	Description   string    `gorm:"column:description" json:"description"`         //描述
-	Status        int8      `gorm:"column:status" json:"status"`                   //状态 1:启用 2:禁用
-	Operator      string    `gorm:"column:operator" json:"operator"`               //操作者
-	LastLoginTime time.Time `gorm:"column:last_login_time" json:"last_login_time"` //最后一次登录时间
-	CreateTime    time.Time `gorm:"column:create_time" json:"create_time"`         //创建时间
-	UpdateTime    time.Time `gorm:"column:update_time" json:"update_time"`         //更新时间
+	Id            int64  `gorm:"column:id" json:"id" form:"id"`
+	Account       string `gorm:"column:account" json:"account" form:"account"`                         //账号
+	PassWord      string `gorm:"column:pass_word" json:"pass_word" form:"pass_word"`                   //密码
+	Username      string `gorm:"column:username" json:"username" form:"username"`                      //账号姓名
+	Phone         string `gorm:"column:phone" json:"phone" form:"phone"`                               //电话
+	Description   string `gorm:"column:description" json:"description" form:"description"`             //描述
+	Status        int8   `gorm:"column:status" json:"status" form:"status"`                            //状态 2启用 1:禁用
+	Operator      string `gorm:"column:operator" json:"operator" form:"operator"`                      //操作者
+	LastLoginTime int64  `gorm:"column:last_login_time" json:"last_login_time" form:"last_login_time"` //最后一次登录时间
+	CreateTime    int64  `gorm:"column:create_time" json:"create_time" form:"create_time"`             //创建时间
+	UpdateTime    int64  `gorm:"column:update_time" json:"update_time" form:"update_time"`             //更新时间
 }

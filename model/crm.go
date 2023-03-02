@@ -5,6 +5,20 @@ type CrmAccountLogin struct {
 	Pd       string `json:"pd" form:"user_name"`
 }
 
+type CrmUserListRequest struct {
+	BaseRequest
+}
+
+type CrmUserListRes struct {
+	List  interface{} `json:"list"`
+	Total int64       `json:"total"`
+}
+
+type CrmUserRequest struct {
+	BaseRequest
+	Users
+}
+
 type RoleRequest struct {
 	BaseRequest
 	Role

@@ -38,6 +38,7 @@ func (s *Service) RoleAdd(req model.RoleRequest) (interface{}, error) {
 	if err != nil {
 		s.logger.Sugar().Errorf("err :%v", err)
 	}
+	s.Response.Data = row
 	return row, err
 }
 
@@ -46,6 +47,7 @@ func (s *Service) RoleModify(req model.RoleRequest) (interface{}, error) {
 	if err != nil {
 		s.logger.Sugar().Errorf("err :%v", err)
 	}
+	s.Response.Data = row
 	return row, err
 }
 
@@ -54,6 +56,7 @@ func (s *Service) RoleDel(id, operatorUid int64) (interface{}, error) {
 	if err != nil {
 		s.logger.Sugar().Errorf("err :%v", err)
 	}
+	s.Response.Data = row
 	return row, err
 }
 
@@ -111,5 +114,6 @@ func (s *Service) DelRoleTypeInfo(id, operatorUid int64) (interface{}, error) {
 	if err != nil {
 		s.logger.Sugar().Errorf("err :%v", err)
 	}
+	s.Response.Data = row
 	return row, err
 }
