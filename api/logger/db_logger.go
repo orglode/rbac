@@ -19,7 +19,7 @@ type logger struct {
 // init 创建runtime目录，并初始化Logger
 func init() {
 	if !isDir("runtime") {
-		err := os.Mkdir("runtime", 0755)
+		err := os.Mkdir("./log", 0777)
 		if err != nil {
 			panic("无法创建runtime目录")
 		}
@@ -64,7 +64,7 @@ func new() *logger {
 // setLogfile 更新日志文件
 func (l *logger) setLogfile() error {
 	year, month, day := time.Now().Date()
-	dir := fmt.Sprintf("runtime/%d/%02d", year, month)
+	dir := fmt.Sprintf("./log/%d/%02d", year, month)
 
 	//锁住，防止并发时，多次执行创建。os.MkdirAll在目录存在时，也不会返回错误，锁不锁都行
 	l.m.Lock()

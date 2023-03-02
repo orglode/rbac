@@ -12,13 +12,14 @@ func InitLogger() *zap.Logger {
 	encoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05")
 	encoder := zapcore.NewJSONEncoder(encoderConfig)
 
-	file1, _ := os.Create("./log/info_" + time.Now().Format("20060102") + ".log")
+	//file1, _ := os.Create("./log/info_" + time.Now().Format("20060102") + ".log")
 	file2, _ := os.Create("./log/error_" + time.Now().Format("20060102") + ".log")
 
-	core1 := zapcore.NewCore(encoder, zapcore.AddSync(file1), zapcore.DebugLevel)
+	//core1 := zapcore.NewCore(encoder, zapcore.AddSync(file1), zapcore.DebugLevel)
 	core2 := zapcore.NewCore(encoder, zapcore.AddSync(file2), zapcore.ErrorLevel)
 	// 将两个core合并成一个新的core
-	newcore := zapcore.NewTee(core1, core2)
+	//newcore := zapcore.NewTee(core1, core2)
+	newcore := zapcore.NewTee(core2)
 	// 创建logger
 	log := zap.New(newcore)
 	return log
