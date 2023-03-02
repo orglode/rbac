@@ -7,6 +7,9 @@ type CrmAccountLogin struct {
 
 type CrmUserListRequest struct {
 	BaseRequest
+	Phone    string `form:"phone"`
+	Username string `gorm:"column:username" json:"username" form:"username"` //账号姓名
+	Status   int8   `gorm:"column:status" json:"status" form:"status"`       //状态 2启用 1:禁用
 }
 
 type CrmUserListInfo struct {
@@ -38,11 +41,19 @@ type RoleTypeRequest struct {
 
 type RoleListRequest struct {
 	BaseRequest
+	RoleName string `form:"role_name"`
+	Status   int8   `form:"status"`
+	RoleType int64  `form:"role_type"`
 }
 
 type RoleListRes struct {
 	List  interface{} `json:"list"`
 	Total int64       `json:"total"`
+}
+
+type RoleListInfo struct {
+	Role
+	TypeName string `json:"type_name"`
 }
 
 type RoleTypeListRequest struct {

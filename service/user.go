@@ -10,7 +10,7 @@ import (
 
 func (s *Service) CrmUserListInfo(req model.CrmUserListRequest) {
 	result := model.CrmUserListRes{}
-	res, count, err := s.dao.GetCrmUserList(dao.Paging{
+	res, count, err := s.dao.GetCrmUserList(req, dao.Paging{
 		Size: req.Size,
 		Page: req.Page,
 	})

@@ -2,13 +2,22 @@ package dao
 
 import "github.com/orglode/navigator/model"
 
-func (d *Dao) GetCrmUserList(p Paging) ([]model.CrmUserListInfo, int64, error) {
+func (d *Dao) GetCrmUserList(req model.CrmUserListRequest, p Paging) ([]model.CrmUserListInfo, int64, error) {
 	res := make([]model.CrmUserListInfo, 0)
 	var count int64
 	db := d.MySqlSlave.Table(UserTable).Select("users.*,role_type.type_name as role_type_name,role.name as role_name").
 		Joins("left join user_role on user_role.user_id = users.id").
 		Joins("left join role on role.id = user_role.role_id").
 		Joins("left join role_type on role.type_id = role_type.id")
+	if req.Phone != "" {
+		db = db.Where("users.phone = ?", req.Phone)
+	}
+	if req.Status > 0 {
+		db = db.Where("users.status = ?", req.Status)
+	}
+	if req.Username != "" {
+		db = db.Where("users.username = ?", req.Username)
+	}
 	if err := db.Count(&count).Error; err != nil {
 		d.logger.Sugar().Errorf("err :%v", err)
 		return nil, 0, err

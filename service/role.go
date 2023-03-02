@@ -9,7 +9,7 @@ import (
 
 func (s *Service) CrmRoleListInfo(req model.RoleListRequest) (interface{}, error) {
 	result := model.RoleListRes{}
-	res, count, err := s.dao.GetCrmRoleList(dao.Paging{
+	res, count, err := s.dao.GetCrmRoleList(req, dao.Paging{
 		Size: req.Size,
 		Page: req.Page,
 	})
