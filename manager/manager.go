@@ -2,7 +2,7 @@ package manager
 
 import (
 	"github.com/kirinlabs/HttpRequest"
-	"github.com/orglode/navigator/api"
+	"github.com/orglode/navigator/api/logger"
 	"github.com/orglode/navigator/conf"
 	"go.uber.org/zap"
 )
@@ -17,6 +17,6 @@ func NewManager(conf *conf.Config) *Manager {
 	return &Manager{
 		c:          conf,
 		httpClient: HttpRequest.NewRequest(),
-		logger:     api.InitLogger(),
+		logger:     logger.InitLogger(),
 	}
 }

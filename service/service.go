@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/orglode/navigator/api"
+	"github.com/orglode/navigator/api/logger"
 	"github.com/orglode/navigator/conf"
 	"github.com/orglode/navigator/dao"
 	"github.com/orglode/navigator/manager"
@@ -22,7 +23,7 @@ func NewService(conf *conf.Config) *Service {
 		c:      conf,
 		mgr:    manager.NewManager(conf),
 		dao:    dao.NewDao(conf),
-		logger: api.InitLogger(),
+		logger: logger.InitLogger(),
 		Response: &model.BaseResponse{
 			Code: api.Success,
 		},

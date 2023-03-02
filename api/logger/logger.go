@@ -1,4 +1,4 @@
-package api
+package logger
 
 import (
 	"go.uber.org/zap"
@@ -20,6 +20,6 @@ func InitLogger() *zap.Logger {
 	// 将两个core合并成一个新的core
 	newcore := zapcore.NewTee(core1, core2)
 	// 创建logger
-	logger := zap.New(newcore)
-	return logger
+	log := zap.New(newcore)
+	return log
 }

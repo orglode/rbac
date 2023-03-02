@@ -11,7 +11,8 @@ type BaseResponse struct {
 }
 
 type BaseRequest struct {
-	OperatorUid int64 `json:"operator_uid" form:"operator_uid" binding:"required" `
+	//OperatorUid int64 `json:"operator_uid" form:"operator_uid" binding:"required" `
+	OperatorUid int64 `json:"operator_uid" form:"operator_uid"`
 	Page        int   `json:"page" form:"page"`
 	Size        int   `json:"size" form:"size"`
 }

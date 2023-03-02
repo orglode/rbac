@@ -4,9 +4,9 @@ import (
 	"github.com/orglode/navigator/model"
 )
 
-func (d *Dao) GetCrmRoleList(p Paging) ([]model.Role, int, error) {
+func (d *Dao) GetCrmRoleList(p Paging) ([]model.Role, int64, error) {
 	res := make([]model.Role, 0)
-	count := 0
+	var count int64
 	db := d.MySqlSlave.Table(roleTable)
 	if err := db.Count(&count).Error; err != nil {
 		d.logger.Sugar().Errorf("err :%v", err)

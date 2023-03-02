@@ -21,7 +21,7 @@ type RoleListRequest struct {
 
 type RoleListRes struct {
 	List  interface{} `json:"list"`
-	Total int         `json:"total"`
+	Total int64       `json:"total"`
 }
 
 type RoleTypeListRequest struct {
@@ -30,5 +30,5 @@ type RoleTypeListRequest struct {
 
 type RoleTypeListRes struct {
 	List  interface{} `json:"list"`
-	Total int         `json:"total"`
+	Total int64       `json:"total"`
 }
