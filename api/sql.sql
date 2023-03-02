@@ -116,6 +116,7 @@ CREATE TABLE `users` (
 `phone` varchar(50) NOT NULL DEFAULT '' COMMENT '电话',
 `description` varchar(65) NOT NULL DEFAULT '' COMMENT '描述',
 `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态 1:启用 2:禁用',
+`operator_uid` int(11) NOT NULL DEFAULT 0 COMMENT '操作者id',
 `operator` varchar(50) NOT NULL DEFAULT '' COMMENT '操作者',
 `last_login_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最后一次登录时间',
 `create_time` int(11) NOT NULL DEFAULT 0 COMMENT '创建时间',
@@ -125,7 +126,7 @@ PRIMARY KEY (`id`)
 
 
 
-CREATE TABLE `inke_user_role` (
+CREATE TABLE `user_role` (
 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
 `user_id` int(11) NOT NULL DEFAULT '0' COMMENT '用户id',
 `role_id` int(11) NOT NULL DEFAULT '0' COMMENT '角色id',

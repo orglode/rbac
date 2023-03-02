@@ -70,10 +70,12 @@ type UrlSkip struct {
 }
 
 // 用户角色关系表
-type InkeUserRole struct {
-	Id     int64 `gorm:"column:id" json:"id"`
-	UserId int64 `gorm:"column:user_id" json:"user_id"` //用户id
-	RoleId int64 `gorm:"column:role_id" json:"role_id"` //角色id
+type UserRole struct {
+	Id         int64 `gorm:"column:id" json:"id"`
+	UserId     int64 `gorm:"column:user_id" json:"user_id"`                            //用户id
+	RoleId     int64 `gorm:"column:role_id" json:"role_id"`                            //角色id
+	CreateTime int64 `gorm:"column:create_time" json:"create_time" form:"create_time"` //创建时间
+	UpdateTime int64 `gorm:"column:update_time" json:"update_time" form:"update_time"` //更新时间
 }
 
 // 系统用户表
@@ -85,6 +87,7 @@ type Users struct {
 	Phone         string `gorm:"column:phone" json:"phone" form:"phone"`                               //电话
 	Description   string `gorm:"column:description" json:"description" form:"description"`             //描述
 	Status        int8   `gorm:"column:status" json:"status" form:"status"`                            //状态 2启用 1:禁用
+	OperatorUid   int64  `gorm:"column:operator_uid" json:"operator_uid" form:"operator_uid"`          //操作者
 	Operator      string `gorm:"column:operator" json:"operator" form:"operator"`                      //操作者
 	LastLoginTime int64  `gorm:"column:last_login_time" json:"last_login_time" form:"last_login_time"` //最后一次登录时间
 	CreateTime    int64  `gorm:"column:create_time" json:"create_time" form:"create_time"`             //创建时间

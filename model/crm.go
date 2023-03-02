@@ -9,6 +9,12 @@ type CrmUserListRequest struct {
 	BaseRequest
 }
 
+type CrmUserListInfo struct {
+	Users
+	RoleName     string `json:"role_name"`
+	RoleTypeName string `json:"role_type_name"`
+}
+
 type CrmUserListRes struct {
 	List  interface{} `json:"list"`
 	Total int64       `json:"total"`
@@ -17,6 +23,7 @@ type CrmUserListRes struct {
 type CrmUserRequest struct {
 	BaseRequest
 	Users
+	RoleId int64 `form:"role_id" json:"role_id"`
 }
 
 type RoleRequest struct {

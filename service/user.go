@@ -18,6 +18,9 @@ func (s *Service) CrmUserListInfo(req model.CrmUserListRequest) {
 		s.Response.Code = api.SystemErr
 		s.logger.Sugar().Errorf("err :%v", err)
 	}
+	for k, _ := range res {
+		res[k].PassWord = ""
+	}
 	result.List = res
 	result.Total = count
 	s.Response.Data = result
@@ -29,6 +32,13 @@ func (s *Service) UserAdd(req model.CrmUserRequest) {
 	if err != nil {
 		s.logger.Sugar().Errorf("err :%v", err)
 	}
+	if row > 0 && req.RoleId > 0 {
+		s.dao.AddUserRoleInfo(model.UserRole{
+			UserId:     req.Id,
+			RoleId:     req.RoleId,
+			CreateTime: time.Now().Unix(),
+		})
+	}
 	s.Response.Data = row
 }
 
@@ -37,6 +47,12 @@ func (s *Service) UserModify(req model.CrmUserRequest) {
 	row, err := s.dao.ModifyUserInfo(req.Id, req.Users)
 	if err != nil {
 		s.logger.Sugar().Errorf("err :%v", err)
+	}
+	if req.RoleId > 0 {
+		s.dao.ModifyUserRoleUserIdInfo(req.Id, model.UserRole{
+			RoleId:     req.RoleId,
+			UpdateTime: time.Now().Unix(),
+		})
 	}
 	s.Response.Data = row
 }
