@@ -82,22 +82,13 @@ CREATE TABLE `role_module` (
 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
 `role_id` smallint(6) NOT NULL DEFAULT '0' COMMENT '角色ID',
 `module_id` int(11) NOT NULL DEFAULT '0' COMMENT '模块id',
+`create_time` int(11) NOT NULL DEFAULT 0 COMMENT '创建时间',
+`update_time` int(11)  NOT NULL DEFAULT 0 COMMENT '更新时间',
+Primary Key (`id`),
 UNIQUE KEY `role_id` (`role_id`,`module_id`)
 ) ENGINE=InnoDB  AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='角色权限映射关系表';
 
 
-
-CREATE TABLE `page_type` (
-`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-`name` varchar(50) NOT NULL DEFAULT '' COMMENT '页面分类名称',
-`module_ids` varchar(2000) NOT NULL DEFAULT '0' COMMENT '模块ids',
-`status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态 1：有效 2：删除',
-`operator` varchar(30) NOT NULL DEFAULT '' COMMENT '操作者',
-`create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-`update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-PRIMARY KEY (`id`),
-KEY `name` (`name`),
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='页面分类表';
 
 
 CREATE TABLE `url_skip` (
@@ -107,6 +98,10 @@ CREATE TABLE `url_skip` (
 `desc` varchar(100) NOT NULL DEFAULT '' COMMENT 'url描述',
 PRIMARY KEY (`id`),
 ) ENGINE=InnoDB AUTO_INCREMENT=1  DEFAULT CHARSET=utf8 COMMENT='系统下需要跳过校验的特殊url表';
+
+
+
+
 
 CREATE TABLE `users` (
 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -118,7 +113,7 @@ CREATE TABLE `users` (
 `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态 1:启用 2:禁用',
 `operator_uid` int(11) NOT NULL DEFAULT 0 COMMENT '操作者id',
 `operator` varchar(50) NOT NULL DEFAULT '' COMMENT '操作者',
-`last_login_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最后一次登录时间',
+`last_login_time` int(11) NOT NULL DEFAULT 0 COMMENT '最后一次登录时间',
 `create_time` int(11) NOT NULL DEFAULT 0 COMMENT '创建时间',
 `update_time` int(11)  NOT NULL DEFAULT 0 COMMENT '更新时间',
 PRIMARY KEY (`id`)
@@ -130,6 +125,8 @@ CREATE TABLE `user_role` (
 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
 `user_id` int(11) NOT NULL DEFAULT '0' COMMENT '用户id',
 `role_id` int(11) NOT NULL DEFAULT '0' COMMENT '角色id',
+`create_time` int(11) NOT NULL DEFAULT 0 COMMENT '创建时间',
+`update_time` int(11)  NOT NULL DEFAULT 0 COMMENT '更新时间',
 KEY `sel` (`user_id`,`role_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='用户角色关系表';
 

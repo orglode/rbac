@@ -4,19 +4,19 @@ import "time"
 
 // 权限模块表
 type Module struct {
-	Id         int64     `gorm:"column:id" json:"id"`
-	Name       string    `gorm:"column:name" json:"name"`               //模块名称
-	ApiPath    string    `gorm:"column:api_path" json:"api_path"`       //后端接口
-	Parent     int64     `gorm:"column:parent" json:"parent"`           //所属父级信息
-	Sort       int       `gorm:"column:sort" json:"sort"`               //排序 数值越大越靠后
-	Code       int       `gorm:"column:code" json:"code"`               //按钮标记 0--菜单 1--查询 2-添加 3--修改 4-删除 5-修改其他状态，6–导出，其他标记 ...
-	Type       string    `gorm:"column:type" json:"type"`               //前端区分按钮 页面 1–菜单 2--按钮
-	Root       string    `gorm:"column:root" json:"root"`               //前端路由使用
-	Status     int8      `gorm:"column:status" json:"status"`           //1--启用 2--禁用 3--菜单上不显示
-	OperatorId int64     `gorm:"column:operator_id" json:"operator_id"` //操作者id
-	Operator   string    `gorm:"column:operator" json:"operator"`       //操作者
-	CreateTime time.Time `gorm:"column:create_time" json:"create_time"` //创建时间
-	UpdateTime time.Time `gorm:"column:update_time" json:"update_time"` //更新时间
+	Id         int64  `gorm:"column:id" json:"id"`
+	Name       string `gorm:"column:name" json:"name"`               //模块名称
+	ApiPath    string `gorm:"column:api_path" json:"api_path"`       //后端接口
+	Parent     int64  `gorm:"column:parent" json:"parent"`           //所属父级信息
+	Sort       int    `gorm:"column:sort" json:"sort"`               //排序 数值越大越靠后
+	Code       int    `gorm:"column:code" json:"code"`               //按钮标记 0--菜单 1--查询 2-添加 3--修改 4-删除 5-修改其他状态，6–导出，其他标记 ...
+	Type       int    `gorm:"column:type" json:"type"`               //前端区分按钮 页面 1–菜单 2--按钮
+	Root       string `gorm:"column:root" json:"root"`               //前端路由使用
+	Status     int8   `gorm:"column:status" json:"status"`           //1--启用 2--禁用 3--菜单上不显示
+	OperatorId int64  `gorm:"column:operator_id" json:"operator_id"` //操作者id
+	Operator   string `gorm:"column:operator" json:"operator"`       //操作者
+	CreateTime int64  `gorm:"column:create_time" json:"create_time"` //创建时间
+	UpdateTime int64  `gorm:"column:update_time" json:"update_time"` //更新时间
 }
 
 // 角色类型表

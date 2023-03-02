@@ -34,6 +34,9 @@ const (
 
 	UserTable     = "users"     //用户表
 	UserRoleTable = "user_role" //用户类型
+
+	ModuleTable     = "module"      //菜单表
+	ModuleRoleTable = "role_module" //菜单角色映射表
 )
 
 type Paging struct {

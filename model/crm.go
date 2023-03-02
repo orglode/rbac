@@ -64,3 +64,13 @@ type RoleTypeListRes struct {
 	List  interface{} `json:"list"`
 	Total int64       `json:"total"`
 }
+
+type ModuleRequest struct {
+	BaseRequest
+	Module
+	RoleId int64 `json:"role_id"`
+}
+
+type ModuleAllRes struct {
+	List interface{} `json:"list"`
+}
