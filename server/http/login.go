@@ -8,16 +8,20 @@ import (
 	"net/http"
 )
 
-func backgroundList(c *gin.Context) {
-	req := model.UserPageList{}
+func backgroundLoginOut(c *gin.Context) {
+	req := model.BaseRequest{}
 	if err := c.ShouldBindQuery(&req); err != nil {
 		c.JSON(http.StatusOK, model.BaseResponse{
 			Code: api.MissingParameter,
 		})
 		return
 	}
-	svc.GetUserPageShow(req)
-	c.JSON(http.StatusOK, svc.Response)
+	sInfo := sessions.Default(c)
+	sInfo.Delete("uid")
+	sInfo.Save()
+	c.JSON(http.StatusOK, model.BaseResponse{
+		Code: api.Success,
+	})
 	return
 }
 
@@ -39,4 +43,15 @@ func backgroundLogin(c *gin.Context) {
 	svc.AccountLogin(req, sInfo)
 	c.JSON(http.StatusOK, svc.Response)
 	return
+}
+
+func checkUserLoginSession(c *gin.Context) {
+	sInfo := sessions.Default(c)
+	userInfo := sInfo.Get("uid")
+	if userInfo == nil {
+		c.AbortWithStatusJSON(http.StatusOK, model.BaseResponse{
+			Code: api.UserNoLogin,
+		})
+		return
+	}
 }

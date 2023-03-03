@@ -22,9 +22,7 @@ func (s *Service) AccountLogin(req model.AccountLoginRequest, session sessions.S
 		return
 	}
 	userInfo.PassWord = ""
-	session.Set("user", model.UserSessionInfo{
-		UserId: userInfo.Id,
-	})
+	session.Set("uid", userInfo.Id)
 	session.Save()
 	s.Response.Data = userInfo
 	return
