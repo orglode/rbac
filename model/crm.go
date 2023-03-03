@@ -32,6 +32,7 @@ type CrmUserRequest struct {
 type RoleRequest struct {
 	BaseRequest
 	Role
+	RoleModuleId []int64 `json:"role_module_id"`
 }
 
 type RoleTypeRequest struct {

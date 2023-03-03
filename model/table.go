@@ -30,17 +30,17 @@ type RoleType struct {
 
 // 角色表（含数据范围）
 type Role struct {
-	Id          int64     `gorm:"column:id" json:"id"`
-	Pid         string    `gorm:"column:pid" json:"pid"`                   //父级角色id，多个逗号分隔
-	TypeId      int16     `gorm:"column:type_id" json:"type_id"`           //角色类型id
-	Name        string    `gorm:"column:name" json:"name"`                 //角色名称
-	Description string    `gorm:"column:description" json:"description"`   //角色描述
-	OperatorId  int64     `gorm:"column:operator_id" json:"operator_id"`   //后台操作人id
-	Operator    string    `gorm:"column:operator" json:"operator"`         //操作人名称
-	PageTypeId  int       `gorm:"column:page_type_id" json:"page_type_id"` //页面分类id
-	Status      int8      `gorm:"column:status" json:"status"`             //状态 1--启用 2--禁用
-	CreateTime  time.Time `gorm:"column:create_time" json:"create_time"`   //创建时间
-	UpdateTime  time.Time `gorm:"column:update_time" json:"update_time"`   //更新时间
+	Id          int64      `gorm:"column:id" json:"id"`
+	Pid         string     `gorm:"column:pid" json:"pid"`                   //父级角色id，多个逗号分隔
+	TypeId      int16      `gorm:"column:type_id" json:"type_id"`           //角色类型id
+	Name        string     `gorm:"column:name" json:"name"`                 //角色名称
+	Description string     `gorm:"column:description" json:"description"`   //角色描述
+	OperatorId  int64      `gorm:"column:operator_id" json:"operator_id"`   //后台操作人id
+	Operator    string     `gorm:"column:operator" json:"operator"`         //操作人名称
+	PageTypeId  int        `gorm:"column:page_type_id" json:"page_type_id"` //页面分类id
+	Status      int8       `gorm:"column:status" json:"status"`             //状态 1--启用 2--禁用
+	CreateTime  time.Time  `gorm:"column:create_time" json:"create_time"`   //创建时间
+	UpdateTime  *time.Time `gorm:"column:update_time" json:"update_time"`   //更新时间
 }
 
 // 角色权限映射关系表

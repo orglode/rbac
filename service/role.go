@@ -38,7 +38,20 @@ func (s *Service) RoleAdd(req model.RoleRequest) (interface{}, error) {
 	if err != nil {
 		s.logger.Sugar().Errorf("err :%v", err)
 	}
+	if row <= 0 {
+		s.Response.Code = api.SystemErr
+		return s.Response, nil
+	}
 	s.Response.Data = row
+	if len(req.RoleModuleId) <= 0 {
+		return s.Response, nil
+	}
+	for _, v := range req.RoleModuleId {
+		s.dao.AddRoleModuleInfo(model.RoleModule{
+			RoleId:   row,
+			ModuleId: v,
+		})
+	}
 	return row, err
 }
 
@@ -48,6 +61,17 @@ func (s *Service) RoleModify(req model.RoleRequest) (interface{}, error) {
 		s.logger.Sugar().Errorf("err :%v", err)
 	}
 	s.Response.Data = row
+	if len(req.RoleModuleId) <= 0 {
+		return s.Response, nil
+	}
+	//删除原有配置
+	s.dao.DelRoleModuleByRoleIdInfo(req.Id)
+	for _, v := range req.RoleModuleId {
+		s.dao.AddRoleModuleInfo(model.RoleModule{
+			RoleId:   req.Id,
+			ModuleId: v,
+		})
+	}
 	return row, err
 }
 

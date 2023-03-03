@@ -29,6 +29,24 @@ func (d *Dao) GetCrmUserList(req model.CrmUserListRequest, p Paging) ([]model.Cr
 	return res, count, nil
 }
 
+func (d *Dao) GetUserInfoByAccount(account string) (model.Users, error) {
+	res := model.Users{}
+	db := d.MySqlSlave.Table(UserTable).Where("account = ?", account).First(&res)
+	if db.Error != nil {
+		d.logger.Sugar().Errorf("err :%v", db.Error)
+	}
+	return res, db.Error
+}
+
+func (d *Dao) GetUserInfoById(id int64) (model.Users, error) {
+	res := model.Users{}
+	db := d.MySqlSlave.Table(UserTable).Where("id = ?", id).First(&res)
+	if db.Error != nil {
+		d.logger.Sugar().Errorf("err :%v", db.Error)
+	}
+	return res, db.Error
+}
+
 func (d *Dao) AddUserInfo(info model.Users) (int64, error) {
 	db := d.MySqlMaster.Table(UserTable).Create(&info)
 	if db.Error != nil {

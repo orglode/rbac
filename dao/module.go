@@ -97,3 +97,16 @@ func (d *Dao) DelRoleModuleInfo(id int64) (bool, error) {
 	}
 	return true, nil
 }
+
+func (d *Dao) DelRoleModuleByRoleIdInfo(roleId int64) (bool, error) {
+	res := model.RoleModule{}
+	db := d.MySqlMaster.Table(ModuleRoleTable).Where("role_id = ?", roleId).Delete(&res)
+	if db.RowsAffected <= 0 {
+		return false, nil
+	}
+	if db.Error != nil {
+		d.logger.Sugar().Errorf("err:%v", db.Error)
+		return false, db.Error
+	}
+	return true, nil
+}

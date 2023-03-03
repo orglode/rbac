@@ -7,6 +7,19 @@ import (
 	"net/http"
 )
 
+func backgroundList(c *gin.Context) {
+	req := model.UserPageList{}
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusOK, model.BaseResponse{
+			Code: api.MissingParameter,
+		})
+		return
+	}
+	svc.GetUserPageShow(req)
+	c.JSON(http.StatusOK, svc.Response)
+	return
+}
+
 func pageAdd(c *gin.Context) {
 	req := model.ModuleRequest{}
 	if err := c.BindJSON(&req); err != nil {
