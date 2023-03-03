@@ -39,8 +39,11 @@ func Init(s *service.Service, conf *conf.Config) {
 	router.Run(conf.HttpAddr)
 }
 func initSession(router *gin.Engine) {
+	//初始化配置
 	store := cookie.NewStore([]byte("secret"))
+	//配置失效时间
 	store.Options(sessions.Options{MaxAge: 3600})
+	//使用session中间件
 	router.Use(sessions.Sessions("session", store))
 
 }
