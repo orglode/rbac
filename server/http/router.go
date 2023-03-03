@@ -18,14 +18,14 @@ func initRouter(rbac *gin.Engine) {
 	rbac.POST("background/user/modify", checkUserLoginSession, userModify)
 	rbac.GET("background/user/del", checkUserLoginSession, userDel)
 
-	//角色管理-ing
+	//角色管理
 	rbac.GET("background/role/list", checkUserLoginSession, roleList)
 	rbac.POST("background/role/add", checkUserLoginSession, roleAdd)
 	rbac.GET("background/role/all", checkUserLoginSession, roleAll)
 	rbac.POST("background/role/modify", checkUserLoginSession, roleModify)
 	rbac.GET("background/role/del", checkUserLoginSession, roleDel)
 
-	//角色类型管理-ok
+	//角色类型管理
 	rbac.GET("background/role_type/list", checkUserLoginSession, roleTypeList)
 	rbac.GET("background/role_type/all", checkUserLoginSession, roleTypeAll)
 	rbac.POST("background/role_type/add", checkUserLoginSession, roleTypeAdd)
