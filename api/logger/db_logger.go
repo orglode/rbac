@@ -18,8 +18,8 @@ type logger struct {
 
 // init 创建runtime目录，并初始化Logger
 func init() {
-	if !isDir("log") {
-		err := os.Mkdir("./log", 0777)
+	if !isDir("logs") {
+		err := os.Mkdir("./logs", 0777)
 		if err != nil {
 			panic("无法创建log目录")
 		}

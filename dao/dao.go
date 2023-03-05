@@ -2,9 +2,7 @@ package dao
 
 import (
 	"github.com/gomodule/redigo/redis"
-	"github.com/orglode/navigator/api/logger"
-	"github.com/orglode/navigator/conf"
-	"go.uber.org/zap"
+	"github.com/orglode/rbac/conf"
 	_ "gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"time"
@@ -15,7 +13,6 @@ type Dao struct {
 	MySqlMaster *gorm.DB
 	MySqlSlave  *gorm.DB
 	Redis       redis.Conn
-	logger      *zap.Logger
 }
 
 func NewDao(conf *conf.Config) *Dao {
@@ -24,7 +21,6 @@ func NewDao(conf *conf.Config) *Dao {
 		MySqlMaster: initMysqlDb(conf.DbMaster),
 		MySqlSlave:  initMysqlDb(conf.DbSlave),
 		Redis:       initRedis(conf),
-		logger:      logger.InitLogger(),
 	}
 }
 

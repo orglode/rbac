@@ -1,4 +1,4 @@
-module github.com/orglode/navigator
+module github.com/orglode/rbac
 
 go 1.19
 
@@ -8,6 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.9.0
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/kirinlabs/HttpRequest v1.1.1
+	github.com/orglode/hades v0.0.0-20230304152453-e24f20a504b1
 	go.uber.org/zap v1.24.0
 	gorm.io/driver/mysql v1.4.7
 	gorm.io/gorm v1.23.8

@@ -1,7 +1,8 @@
 package dao
 
 import (
-	"github.com/orglode/navigator/model"
+	"github.com/orglode/hades/logging"
+	"github.com/orglode/rbac/model"
 )
 
 func (d *Dao) GetCrmRoleList(req model.RoleListRequest, p Paging) ([]model.RoleListInfo, int64, error) {
@@ -19,11 +20,11 @@ func (d *Dao) GetCrmRoleList(req model.RoleListRequest, p Paging) ([]model.RoleL
 		db = db.Where("role.name = ?", req.RoleName)
 	}
 	if err := db.Count(&count).Error; err != nil {
-		d.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", db.Error)
 		return nil, 0, err
 	}
 	if err := db.Limit(p.Size).Offset(p.Offset()).Order("role.id desc").Find(&res).Error; err != nil {
-		d.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", db.Error)
 		return nil, 0, err
 	}
 	return res, count, nil
@@ -33,7 +34,7 @@ func (d *Dao) GetRoleAll() ([]model.Role, error) {
 	res := make([]model.Role, 0)
 	db := d.MySqlSlave.Table(roleTable).Where("status = ?", model.StatusSuccess).Order("id desc").Find(&res)
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return res, db.Error
 	}
 	return res, nil
@@ -42,7 +43,7 @@ func (d *Dao) GetRoleAll() ([]model.Role, error) {
 func (d *Dao) AddRoleInfo(info model.Role) (int64, error) {
 	db := d.MySqlMaster.Table(roleTable).Create(&info)
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return 0, db.Error
 	}
 	return info.Id, nil
@@ -54,7 +55,7 @@ func (d *Dao) ModifyRoleInfo(id int64, info model.Role) (bool, error) {
 		return false, nil
 	}
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return false, db.Error
 	}
 	return true, nil
@@ -66,7 +67,7 @@ func (d *Dao) DelRoleInfo(id int64) (bool, error) {
 		return false, nil
 	}
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return false, db.Error
 	}
 	return true, nil

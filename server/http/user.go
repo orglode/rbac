@@ -2,8 +2,8 @@ package http
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/orglode/navigator/api"
-	"github.com/orglode/navigator/model"
+	"github.com/orglode/rbac/api"
+	"github.com/orglode/rbac/model"
 	"net/http"
 )
 

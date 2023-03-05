@@ -1,9 +1,10 @@
 package service
 
 import (
-	"github.com/orglode/navigator/api"
-	"github.com/orglode/navigator/dao"
-	"github.com/orglode/navigator/model"
+	"github.com/orglode/hades/logging"
+	"github.com/orglode/rbac/api"
+	"github.com/orglode/rbac/dao"
+	"github.com/orglode/rbac/model"
 	"time"
 )
 
@@ -15,7 +16,7 @@ func (s *Service) CrmUserListInfo(req model.CrmUserListRequest) {
 	})
 	if err != nil {
 		s.Response.Code = api.SystemErr
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	for k, _ := range res {
 		res[k].PassWord = ""
@@ -29,7 +30,7 @@ func (s *Service) UserAdd(req model.CrmUserRequest) {
 	req.CreateTime = time.Now().Unix()
 	row, err := s.dao.AddUserInfo(req.Users)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	if row > 0 && req.RoleId > 0 {
 		s.dao.AddUserRoleInfo(model.UserRole{
@@ -45,7 +46,7 @@ func (s *Service) UserModify(req model.CrmUserRequest) {
 	req.UpdateTime = time.Now().Unix()
 	row, err := s.dao.ModifyUserInfo(req.Id, req.Users)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	if req.RoleId > 0 {
 		s.dao.ModifyUserRoleUserIdInfo(req.Id, model.UserRole{
@@ -59,7 +60,7 @@ func (s *Service) UserModify(req model.CrmUserRequest) {
 func (s *Service) UserDel(id, operatorUid int64) {
 	row, err := s.dao.DelUserInfo(id)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	s.Response.Data = row
 }
