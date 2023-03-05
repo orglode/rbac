@@ -1,9 +1,10 @@
 package service
 
 import (
-	"github.com/orglode/navigator/api"
-	"github.com/orglode/navigator/dao"
-	"github.com/orglode/navigator/model"
+	"github.com/orglode/hades/logging"
+	"github.com/orglode/rbac/api"
+	"github.com/orglode/rbac/dao"
+	"github.com/orglode/rbac/model"
 	"time"
 )
 
@@ -15,7 +16,7 @@ func (s *Service) CrmRoleListInfo(req model.RoleListRequest) (interface{}, error
 	})
 	if err != nil {
 		s.Response.Code = api.SystemErr
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	result.List = res
 	result.Total = count
@@ -27,7 +28,7 @@ func (s *Service) GetRoleAll() (interface{}, error) {
 	res, err := s.dao.GetRoleAll()
 	if err != nil {
 		s.Response.Code = api.SystemErr
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	s.Response.Data = res
 	return s.Response, err
@@ -36,7 +37,7 @@ func (s *Service) GetRoleAll() (interface{}, error) {
 func (s *Service) RoleAdd(req model.RoleRequest) (interface{}, error) {
 	row, err := s.dao.AddRoleInfo(req.Role)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	if row <= 0 {
 		s.Response.Code = api.SystemErr
@@ -58,7 +59,7 @@ func (s *Service) RoleAdd(req model.RoleRequest) (interface{}, error) {
 func (s *Service) RoleModify(req model.RoleRequest) (interface{}, error) {
 	row, err := s.dao.ModifyRoleInfo(req.Id, req.Role)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	s.Response.Data = row
 	if len(req.RoleModuleId) <= 0 {
@@ -78,7 +79,7 @@ func (s *Service) RoleModify(req model.RoleRequest) (interface{}, error) {
 func (s *Service) RoleDel(id, operatorUid int64) (interface{}, error) {
 	row, err := s.dao.DelRoleInfo(id)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	s.Response.Data = row
 	return row, err
@@ -92,7 +93,7 @@ func (s *Service) CrmRoleTypeListInfo(req model.RoleTypeListRequest) (interface{
 	})
 	if err != nil {
 		s.Response.Code = api.SystemErr
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	result.List = res
 	result.Total = count
@@ -104,7 +105,7 @@ func (s *Service) GetRoleTypeAll() (interface{}, error) {
 	res, err := s.dao.GetRoleTypeAll()
 	if err != nil {
 		s.Response.Code = api.SystemErr
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	s.Response.Data = res
 	return s.Response, err
@@ -116,7 +117,7 @@ func (s *Service) RoleTypeAdd(req model.RoleTypeRequest) (interface{}, error) {
 	s.Response.Code = api.Success
 	if err != nil {
 		s.Response.Code = api.SystemErr
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	s.Response.Data = row
 	return s.Response, err
@@ -127,7 +128,7 @@ func (s *Service) RoleTypeModify(req model.RoleTypeRequest) (interface{}, error)
 	s.Response.Code = api.Success
 	row, err := s.dao.ModifyRoleTypeInfo(req.Id, req.RoleType)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	s.Response.Data = row
 	return s.Response, err
@@ -136,7 +137,7 @@ func (s *Service) RoleTypeModify(req model.RoleTypeRequest) (interface{}, error)
 func (s *Service) DelRoleTypeInfo(id, operatorUid int64) (interface{}, error) {
 	row, err := s.dao.DelRoleInfo(id)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	s.Response.Data = row
 	return row, err

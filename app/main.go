@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/orglode/navigator/conf"
-	"github.com/orglode/navigator/server/http"
-	"github.com/orglode/navigator/service"
+	"github.com/orglode/rbac/conf"
+	"github.com/orglode/rbac/server/http"
+	"github.com/orglode/rbac/service"
 )
 
 func main() {

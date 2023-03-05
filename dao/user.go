@@ -1,6 +1,9 @@
 package dao
 
-import "github.com/orglode/navigator/model"
+import (
+	"github.com/orglode/hades/logging"
+	"github.com/orglode/rbac/model"
+)
 
 func (d *Dao) GetCrmUserList(req model.CrmUserListRequest, p Paging) ([]model.CrmUserListInfo, int64, error) {
 	res := make([]model.CrmUserListInfo, 0)
@@ -19,11 +22,11 @@ func (d *Dao) GetCrmUserList(req model.CrmUserListRequest, p Paging) ([]model.Cr
 		db = db.Where("users.username = ?", req.Username)
 	}
 	if err := db.Count(&count).Error; err != nil {
-		d.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", db.Error)
 		return nil, 0, err
 	}
 	if err := db.Limit(p.Size).Offset(p.Offset()).Order("users.id desc").Find(&res).Error; err != nil {
-		d.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", db.Error)
 		return nil, 0, err
 	}
 	return res, count, nil
@@ -33,7 +36,7 @@ func (d *Dao) GetUserInfoByAccount(account string) (model.Users, error) {
 	res := model.Users{}
 	db := d.MySqlSlave.Table(UserTable).Where("account = ?", account).First(&res)
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err :%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 	}
 	return res, db.Error
 }
@@ -42,7 +45,7 @@ func (d *Dao) GetUserInfoById(id int64) (model.Users, error) {
 	res := model.Users{}
 	db := d.MySqlSlave.Table(UserTable).Where("id = ?", id).First(&res)
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err :%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 	}
 	return res, db.Error
 }
@@ -50,7 +53,7 @@ func (d *Dao) GetUserInfoById(id int64) (model.Users, error) {
 func (d *Dao) AddUserInfo(info model.Users) (int64, error) {
 	db := d.MySqlMaster.Table(UserTable).Create(&info)
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return 0, db.Error
 	}
 	return info.Id, nil
@@ -62,7 +65,7 @@ func (d *Dao) ModifyUserInfo(id int64, info model.Users) (bool, error) {
 		return false, nil
 	}
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return false, db.Error
 	}
 	return true, nil
@@ -74,7 +77,7 @@ func (d *Dao) DelUserInfo(id int64) (bool, error) {
 		return false, nil
 	}
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return false, db.Error
 	}
 	return true, nil

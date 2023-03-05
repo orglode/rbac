@@ -1,15 +1,16 @@
 package service
 
 import (
-	"github.com/orglode/navigator/api"
-	"github.com/orglode/navigator/model"
+	"github.com/orglode/hades/logging"
+	"github.com/orglode/rbac/api"
+	"github.com/orglode/rbac/model"
 )
 
 func (s *Service) GetPageAll() (interface{}, error) {
 	res, err := s.dao.GetModuleAll()
 	if err != nil {
 		s.Response.Code = api.SystemErr
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 
 	data := make([]SystemMenu, 0)
@@ -34,7 +35,7 @@ func (s *Service) GetPageAll() (interface{}, error) {
 func (s *Service) PageAdd(req model.ModuleRequest) (interface{}, error) {
 	row, err := s.dao.AddModuleInfo(req.Module)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	s.Response.Data = row
 	return row, err
@@ -43,7 +44,7 @@ func (s *Service) PageAdd(req model.ModuleRequest) (interface{}, error) {
 func (s *Service) PageModify(req model.ModuleRequest) (interface{}, error) {
 	row, err := s.dao.ModifyModuleInfo(req.Id, req.Module)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	s.Response.Data = row
 	return row, err
@@ -52,7 +53,7 @@ func (s *Service) PageModify(req model.ModuleRequest) (interface{}, error) {
 func (s *Service) PageDel(id, operatorUid int64) (interface{}, error) {
 	row, err := s.dao.DelModuleInfo(id)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	s.Response.Data = row
 	return row, err

@@ -1,12 +1,15 @@
 package dao
 
-import "github.com/orglode/navigator/model"
+import (
+	"github.com/orglode/hades/logging"
+	"github.com/orglode/rbac/model"
+)
 
 func (d *Dao) GetUserRole(uid int64) (model.UserRole, error) {
 	res := model.UserRole{}
 	db := d.MySqlSlave.Table(UserRoleTable).Where("user_id = ?", uid).First(&res)
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return res, db.Error
 	}
 	return res, nil
@@ -15,7 +18,7 @@ func (d *Dao) GetUserRole(uid int64) (model.UserRole, error) {
 func (d *Dao) AddUserRoleInfo(info model.UserRole) (int64, error) {
 	db := d.MySqlMaster.Table(UserRoleTable).Create(&info)
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return 0, db.Error
 	}
 	return info.Id, nil
@@ -27,7 +30,7 @@ func (d *Dao) ModifyUserRoleUserIdInfo(userId int64, info model.UserRole) (bool,
 		return false, nil
 	}
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return false, db.Error
 	}
 	return true, nil
@@ -39,7 +42,7 @@ func (d *Dao) ModifyUserRoleInfo(id int64, info model.UserRole) (bool, error) {
 		return false, nil
 	}
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return false, db.Error
 	}
 	return true, nil
@@ -52,7 +55,7 @@ func (d *Dao) DelUserRoleInfo(id int64) (bool, error) {
 		return false, nil
 	}
 	if db.Error != nil {
-		d.logger.Sugar().Errorf("err:%v", db.Error)
+		logging.Errorf("err :%v", db.Error)
 		return false, db.Error
 	}
 	return true, nil
