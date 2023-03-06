@@ -1,29 +1,25 @@
 package service
 
 import (
-	"github.com/orglode/navigator/api"
-	"github.com/orglode/navigator/api/logger"
-	"github.com/orglode/navigator/conf"
-	"github.com/orglode/navigator/dao"
-	"github.com/orglode/navigator/manager"
-	"github.com/orglode/navigator/model"
-	"go.uber.org/zap"
+	"github.com/orglode/rbac/api"
+	"github.com/orglode/rbac/conf"
+	"github.com/orglode/rbac/dao"
+	"github.com/orglode/rbac/manager"
+	"github.com/orglode/rbac/model"
 )
 
 type Service struct {
 	c        *conf.Config
 	mgr      *manager.Manager
 	dao      *dao.Dao
-	logger   *zap.Logger
 	Response *model.BaseResponse
 }
 
 func NewService(conf *conf.Config) *Service {
 	return &Service{
-		c:      conf,
-		mgr:    manager.NewManager(conf),
-		dao:    dao.NewDao(conf),
-		logger: logger.InitLogger(),
+		c:   conf,
+		mgr: manager.NewManager(conf),
+		dao: dao.NewDao(conf),
 		Response: &model.BaseResponse{
 			Code: api.Success,
 		},

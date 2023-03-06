@@ -1,8 +1,9 @@
 package service
 
 import (
-	"github.com/orglode/navigator/api"
-	"github.com/orglode/navigator/model"
+	"github.com/orglode/hades/logging"
+	"github.com/orglode/rbac/api"
+	"github.com/orglode/rbac/model"
 )
 
 func (s *Service) GetUserPageShow(req model.UserPageList) (interface{}, error) {
@@ -10,7 +11,7 @@ func (s *Service) GetUserPageShow(req model.UserPageList) (interface{}, error) {
 	roleInfo, err := s.dao.GetUserRole(req.OperatorUid)
 	if err != nil {
 		s.Response.Code = api.SystemErr
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 		return nil, nil
 	}
 	if roleInfo.RoleId <= 0 {
@@ -20,7 +21,7 @@ func (s *Service) GetUserPageShow(req model.UserPageList) (interface{}, error) {
 	//获取这个角色下的所有菜单
 	roleModule, err := s.dao.GetRoleModuleByRoleIdAll(roleInfo.RoleId)
 	if err != nil {
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 		s.Response.Code = api.SystemErr
 		return nil, nil
 	}
@@ -35,7 +36,7 @@ func (s *Service) GetUserPageShow(req model.UserPageList) (interface{}, error) {
 	res, err := s.dao.GetModuleByIdAll(roleIdArr)
 	if err != nil {
 		s.Response.Code = api.SystemErr
-		s.logger.Sugar().Errorf("err :%v", err)
+		logging.Errorf("err :%v", err)
 	}
 	data := make([]SystemMenu, 0)
 	for _, v := range res {

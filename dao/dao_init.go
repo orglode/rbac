@@ -3,8 +3,8 @@ package dao
 import (
 	"database/sql"
 	"github.com/gomodule/redigo/redis"
-	mylog "github.com/orglode/navigator/api/logger"
-	"github.com/orglode/navigator/conf"
+	mylog "github.com/orglode/rbac/api/logger"
+	"github.com/orglode/rbac/conf"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
