@@ -1,9 +1,23 @@
 env = "production"
 
-http_addr = ":23200"
+[server]
+    name="server"
+    http_addr = ":23200"
 #db
-db_master = "root:1995@Zxd@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=true&loc=Local"
+[database]
+    name=""
+    master = "root:1995@Zxd@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=true&loc=Local"
+    slave = "root:1995@Zxd@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=true&loc=Local"
 
 
-#redis
-redis_url=""
+[redis]
+    name=""
+    addr=""
+    password = "redisinkePassWd"
+    max_active = 500
+    max_idle = 500
+    idle_timeout = 1000
+    connect_timeout = 100
+    read_timeout = 100
+    write_timeout = 100
+    database = 7
