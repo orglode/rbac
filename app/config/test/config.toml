@@ -1,0 +1,21 @@
+[server]
+name = "public"
+addr = ":23200"
+env = "test"
+jwt_token = "ywuieqwi1238799jsjkadk!@#"
+
+[db]
+drive="mysql"
+[db.master]
+url = "db_test:password@tcp(127.0.0.1:3306)/db-name?charset=utf8mb4&parseTime=true&loc=Local"
+max_idle_conns=90
+max_open_conns=100
+conn_max_life_time=10
+
+[db.slave]
+url = "db_test:password@tcp(127.0.0.1:3306)/db-name?charset=utf8mb4&parseTime=true&loc=Local"
+max_idle_conns=90
+max_open_conns=100
+conn_max_life_time=10
+#redis
+redis_url=""

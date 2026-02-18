@@ -1,0 +1,20 @@
+[Unit]
+Description=rbac Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/local/rbac/server/wxMiniApp
+ExecStart=/var/local/rbac/server/wxMiniApp/wxMiniApp
+Restart=always
+RestartSec=5s
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=NODE_ENV=production
+
+# 如果需要标准输出和错误输出到日志文件
+StandardOutput=file:/var/local/rbac/server/wxMiniApp/logs/sys-wxMiniApp.log
+StandardError=file:/var/local/rbac/server/wxMiniApp/logs/sys-wxMiniApp-error.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,29 @@
+[server]
+name = "crm_server"
+addr = ":23200"
+env = "test"
+jwt_token = "ywu*7qwi12387^&@djsjkadk!23"
+logs_path="./logs"
+
+
+[db]
+[db.master]
+drive="mysql"
+url = "kuakuabao:&dhj781*(!@!@tcp(82.156.99.15:3306)/kkb?charset=utf8mb4&parseTime=true&loc=Local"
+max_idle_conn=90
+max_open_conn=100
+conn_max_life_time=10
+
+[db.slave]
+drive="mysql"
+url = "kuakuabao:&dhj781*(!@!@tcp(82.156.99.15:3306)/kkb?charset=utf8mb4&parseTime=true&loc=Local"
+max_idle_conn=90
+max_open_conn=100
+conn_max_life_time=10
+
+
+[redis]
+name = "redis"
+addr = "127.0.0.1:6379"
+password = ""
+db = 0
