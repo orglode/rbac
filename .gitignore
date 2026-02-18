@@ -1,0 +1,23 @@
+# 二进制文件
+*.exe
+*.out
+*.test
+
+# 依赖目录
+vendor/
+bin/
+
+# IDE配置
+.idea/
+.vscode/
+
+# 环境文件
+.env
+.env.local
+
+# 日志
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
