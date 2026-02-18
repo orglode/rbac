@@ -5,8 +5,13 @@ import (
 )
 
 var (
-	PleaseLogin  = &AppError{Code: 490, Message: "please login"}
-	InvalidParam = &AppError{Code: 499, Message: "缺少参数"}
+
+	// ======================base code =========================//
+	Success          = &AppError{Code: 0, Message: "success"}
+	MissingParameter = &AppError{Code: 499, Message: "缺少参数"}
+	InternalError    = &AppError{Code: 500, Message: "网络异常请稍后重试"}
+
+	// ======================base code =========================//
 
 	// RBAC
 	RbacAccountAlreadyExists = &AppError{Code: 600, Message: "账号已存在"}
