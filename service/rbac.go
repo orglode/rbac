@@ -9,6 +9,7 @@ import (
 	"rbac/api/jwt"
 	"rbac/dao"
 	"rbac/model"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -172,6 +173,47 @@ func (s *RbacService) GetLoginLogList(ctx context.Context, query model.LoginLogQ
 	return &model.AccountListRest{List: data, Total: total}, nil
 }
 
+func (s *RbacService) GetOperationLogList(ctx context.Context, query model.OperationLogQuery) (*model.AccountListRest, error) {
+	query.Normalize()
+	data, total, err := s.dao.Rbac.GetOperationLogList(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	return &model.AccountListRest{List: data, Total: total}, nil
+}
+
+func operatorIDFromCtx(ctx context.Context) int64 {
+	v := ctx.Value(model.CtxOperatorID)
+	if v == nil {
+		return 0
+	}
+	id, _ := v.(int64)
+	return id
+}
+
+func (s *RbacService) writeOpLog(ctx context.Context, module, action int, targetType string, targetId int64, targetName, content string) {
+	opID := operatorIDFromCtx(ctx)
+	var opName, opAccount string
+	if opID > 0 {
+		if acc, err := s.dao.Rbac.GetAccountById(ctx, opID); err == nil && acc != nil {
+			opName = acc.UserName
+			opAccount = acc.AccountNumber
+		}
+	}
+	_ = s.dao.Rbac.CreateOperationLog(ctx, &model.OperationLog{
+		Module:          module,
+		Action:          action,
+		TargetType:      targetType,
+		TargetId:        targetId,
+		TargetName:      targetName,
+		Content:         content,
+		OperatorId:      opID,
+		OperatorName:    opName,
+		OperatorAccount: opAccount,
+		CreateTime:      time.Now().Unix(),
+	})
+}
+
 func (s *RbacService) GetUserRole(ctx context.Context, accountId int64) (*model.AccountInfo, error) {
 	data, err := s.dao.Rbac.GetAccountRoleByAccountId(ctx, accountId)
 	if err != nil {
@@ -259,6 +301,9 @@ func (s *RbacService) buildMenuTreeV2(menus []*model.Page) []*model.PageInfo {
 		menu := menus[i]
 		levelMap[menu.PageLevel] = append(levelMap[menu.PageLevel], menu)
 	}
+	for level := range levelMap {
+		sortPages(levelMap[level])
+	}
 
 	toInfo := func(menu *model.Page) *model.PageInfo {
 		return &model.PageInfo{
@@ -270,6 +315,8 @@ func (s *RbacService) buildMenuTreeV2(menus []*model.Page) []*model.PageInfo {
 			ButtonCode: menu.ButtonCode,
 			ApiMethod:  menu.ApiMethod,
 			ApiPath:    menu.ApiPath,
+			Sort:       menu.Sort,
+			CreateTime: menu.CreateTime,
 			ChildPage:  make([]*model.PageInfo, 0),
 			Buttons:    make([]*model.PageInfo, 0),
 		}
@@ -308,6 +355,17 @@ func (s *RbacService) buildMenuTreeV2(menus []*model.Page) []*model.PageInfo {
 	}
 
 	return roots
+}
+
+// sortPages：sort 越大越靠前；相同则 create_time 倒序
+func sortPages(pages []*model.Page) {
+	sort.SliceStable(pages, func(i, j int) bool {
+		a, b := pages[i], pages[j]
+		if a.Sort != b.Sort {
+			return a.Sort > b.Sort
+		}
+		return a.CreateTime > b.CreateTime
+	})
 }
 
 // CheckApiPermission 按按钮绑定的 API 校验权限；无对应按钮则放行（仅登录态）
@@ -410,18 +468,41 @@ func (s *RbacService) GetRoleList(ctx context.Context, page model.Paging) (*mode
 
 func (s *RbacService) AddRole(ctx context.Context, role *model.Role) error {
 	role.CreateTime = time.Now().Unix()
-	return s.dao.Rbac.AddRole(ctx, role)
+	if err := s.dao.Rbac.AddRole(ctx, role); err != nil {
+		return err
+	}
+	s.writeOpLog(ctx, model.OpModuleRole, model.OpActionCreate, "role", role.Id, role.RoleName,
+		fmt.Sprintf("新增角色「%s」", role.RoleName))
+	return nil
 }
 
 func (s *RbacService) ModifyRole(ctx context.Context, role *model.Role) error {
+	oldName := ""
+	if old, err := s.dao.Rbac.GetRoleById(ctx, role.Id); err == nil && old != nil {
+		oldName = old.RoleName
+	}
 	if err := s.dao.Rbac.UpdateRole(ctx, role); err != nil {
 		return err
 	}
+	content := fmt.Sprintf("修改角色「%s」", role.RoleName)
+	if oldName != "" && oldName != role.RoleName {
+		content = fmt.Sprintf("修改角色「%s」→「%s」", oldName, role.RoleName)
+	}
+	s.writeOpLog(ctx, model.OpModuleRole, model.OpActionUpdate, "role", role.Id, role.RoleName, content)
 	return nil
 }
 
 func (s *RbacService) DeleteRole(ctx context.Context, roleId int64) error {
-	return s.dao.Rbac.DeleteRole(ctx, roleId)
+	name := ""
+	if old, err := s.dao.Rbac.GetRoleById(ctx, roleId); err == nil && old != nil {
+		name = old.RoleName
+	}
+	if err := s.dao.Rbac.DeleteRole(ctx, roleId); err != nil {
+		return err
+	}
+	s.writeOpLog(ctx, model.OpModuleRole, model.OpActionDelete, "role", roleId, name,
+		fmt.Sprintf("删除角色「%s」", name))
+	return nil
 }
 
 // GetPageList 按一级菜单分页，返回 一级→二级→按钮（1:N:N）树；支持名称、API 模糊筛选
@@ -541,7 +622,12 @@ func (s *RbacService) AddPage(ctx context.Context, page *model.Page) error {
 		if page.PageLevel == 0 {
 			page.PageLevel = 3
 		}
-		return s.dao.Rbac.AddPage(ctx, page)
+		if err := s.dao.Rbac.AddPage(ctx, page); err != nil {
+			return err
+		}
+		s.writeOpLog(ctx, model.OpModulePage, model.OpActionCreate, "page", page.Id, page.PageName,
+			fmt.Sprintf("新增按钮「%s」(%s %s)", page.PageName, page.ApiMethod, page.ApiPath))
+		return nil
 	}
 
 	if err := s.dao.Rbac.AddPage(ctx, page); err != nil {
@@ -554,6 +640,8 @@ func (s *RbacService) AddPage(ctx context.Context, page *model.Page) error {
 			return err
 		}
 	}
+	s.writeOpLog(ctx, model.OpModulePage, model.OpActionCreate, "page", page.Id, page.PageName,
+		fmt.Sprintf("新增页面「%s」路由=%s level=%d", page.PageName, page.Url, page.PageLevel))
 	return nil
 }
 
@@ -593,6 +681,8 @@ func (s *RbacService) ModifyPage(ctx context.Context, page *model.Page) error {
 	if err := s.dao.Rbac.UpdatePage(ctx, page); err != nil {
 		return err
 	}
+	s.writeOpLog(ctx, model.OpModulePage, model.OpActionUpdate, "page", page.Id, page.PageName,
+		fmt.Sprintf("修改页面「%s」路由=%s sort=%d", page.PageName, page.Url, page.Sort))
 	return nil
 }
 
@@ -630,22 +720,26 @@ func (s *RbacService) DeletePage(ctx context.Context, id int64) error {
 			return err
 		}
 	}
+	s.writeOpLog(ctx, model.OpModulePage, model.OpActionDelete, "page", id, page.PageName,
+		fmt.Sprintf("删除页面「%s」及子节点共 %d 项", page.PageName, len(deleteIds)))
 	return nil
 }
 
 func (s *RbacService) AddPageRole(ctx context.Context, request *model.RolePageRequest) error {
+	roleName := ""
+	if role, err := s.dao.Rbac.GetRoleById(ctx, request.RoleId); err == nil && role != nil {
+		roleName = role.RoleName
+	}
 	//删除原有的菜单配置
 	err := s.dao.Rbac.DeletePageRole(ctx, request.RoleId)
 	if err != nil {
 		return err
 	}
 	pageIds := strings.Split(request.PageIds, ",")
-	if len(pageIds) <= 0 {
-		return nil
-	}
+	count := 0
 	for _, pageIdStr := range pageIds {
-		pageId, err := strconv.ParseInt(pageIdStr, 10, 64)
-		if err != nil {
+		pageId, err := strconv.ParseInt(strings.TrimSpace(pageIdStr), 10, 64)
+		if err != nil || pageId <= 0 {
 			continue
 		}
 		data := &model.RolePage{
@@ -655,14 +749,47 @@ func (s *RbacService) AddPageRole(ctx context.Context, request *model.RolePageRe
 		err = s.dao.Rbac.AddPageRole(ctx, data)
 		if err != nil {
 			logger.Error(ctx, "add role page error")
+			continue
 		}
+		count++
 	}
+	s.writeOpLog(ctx, model.OpModuleRolePage, model.OpActionAssign, "role_page", request.RoleId, roleName,
+		fmt.Sprintf("分配角色「%s」页面权限，共 %d 项，page_ids=%s", roleName, count, request.PageIds))
 	return nil
 }
 
 func (s *RbacService) AddAccountRole(ctx context.Context, role *model.AccountRole) error {
 	role.CreateTime = time.Now().Unix()
-	return s.dao.Rbac.AddAccountRole(ctx, role)
+	accLabel, roleName, oldRoleName := "", "", ""
+	if acc, err := s.dao.Rbac.GetAccountById(ctx, role.AccountId); err == nil && acc != nil {
+		accLabel = acc.AccountNumber
+		if acc.UserName != "" {
+			accLabel = fmt.Sprintf("%s(%s)", acc.UserName, acc.AccountNumber)
+		}
+	}
+	if r, err := s.dao.Rbac.GetRoleById(ctx, role.RoleId); err == nil && r != nil {
+		roleName = r.RoleName
+	}
+	if old, err := s.dao.Rbac.GetAccountRoleByAccountId(ctx, role.AccountId); err == nil && old != nil && old.RoleId > 0 {
+		if old.RoleId == role.RoleId {
+			return nil
+		}
+		if r, err := s.dao.Rbac.GetRoleById(ctx, old.RoleId); err == nil && r != nil {
+			oldRoleName = r.RoleName
+		}
+		if err := s.dao.Rbac.DelAccountRole(ctx, role.AccountId); err != nil {
+			return err
+		}
+	}
+	if err := s.dao.Rbac.AddAccountRole(ctx, role); err != nil {
+		return err
+	}
+	content := fmt.Sprintf("账号「%s」被分配角色「%s」", accLabel, roleName)
+	if oldRoleName != "" {
+		content = fmt.Sprintf("账号「%s」角色由「%s」变更为「%s」", accLabel, oldRoleName, roleName)
+	}
+	s.writeOpLog(ctx, model.OpModuleAccount, model.OpActionAssign, "account_role", role.AccountId, accLabel, content)
+	return nil
 }
 
 func (s *RbacService) AddRolePage(ctx context.Context, roleId int64, pageIds string) error {
@@ -698,5 +825,25 @@ func (s *RbacService) AddRolePage(ctx context.Context, roleId int64, pageIds str
 }
 
 func (s *RbacService) DelAccountRole(ctx context.Context, accountId int64) error {
-	return s.dao.Rbac.DelAccountRole(ctx, accountId)
+	accLabel, roleName := "", ""
+	if acc, err := s.dao.Rbac.GetAccountById(ctx, accountId); err == nil && acc != nil {
+		accLabel = acc.AccountNumber
+		if acc.UserName != "" {
+			accLabel = fmt.Sprintf("%s(%s)", acc.UserName, acc.AccountNumber)
+		}
+	}
+	if old, err := s.dao.Rbac.GetAccountRoleByAccountId(ctx, accountId); err == nil && old != nil && old.RoleId > 0 {
+		if r, err := s.dao.Rbac.GetRoleById(ctx, old.RoleId); err == nil && r != nil {
+			roleName = r.RoleName
+		}
+	}
+	if err := s.dao.Rbac.DelAccountRole(ctx, accountId); err != nil {
+		return err
+	}
+	content := fmt.Sprintf("移除账号「%s」的角色", accLabel)
+	if roleName != "" {
+		content = fmt.Sprintf("移除账号「%s」的角色「%s」", accLabel, roleName)
+	}
+	s.writeOpLog(ctx, model.OpModuleAccount, model.OpActionRemove, "account_role", accountId, accLabel, content)
+	return nil
 }

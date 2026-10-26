@@ -7,6 +7,7 @@ USE `rbac`;
 
 DROP TABLE IF EXISTS `role_page`;
 DROP TABLE IF EXISTS `account_role`;
+DROP TABLE IF EXISTS `operation_log`;
 DROP TABLE IF EXISTS `login_log`;
 DROP TABLE IF EXISTS `page`;
 DROP TABLE IF EXISTS `role`;
@@ -43,6 +44,25 @@ KEY `idx_account_number` (`account_number`),
 KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='登录日志';
 
+CREATE TABLE `operation_log` (
+`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+`module` tinyint(4) NOT NULL DEFAULT 0 COMMENT '1角色 2角色页面权限 3账号角色 4页面资源',
+`action` tinyint(4) NOT NULL DEFAULT 0 COMMENT '1新增 2修改 3删除 4分配 5移除',
+`target_type` varchar(32) NOT NULL DEFAULT '' COMMENT '目标类型 role/page/role_page/account_role',
+`target_id` int(11) NOT NULL DEFAULT 0 COMMENT '目标ID',
+`target_name` varchar(100) NOT NULL DEFAULT '' COMMENT '目标名称',
+`content` varchar(500) NOT NULL DEFAULT '' COMMENT '变更说明',
+`operator_id` int(11) NOT NULL DEFAULT 0 COMMENT '操作人ID',
+`operator_name` varchar(50) NOT NULL DEFAULT '' COMMENT '操作人姓名',
+`operator_account` varchar(50) NOT NULL DEFAULT '' COMMENT '操作人账号',
+`create_time` int(11) NOT NULL DEFAULT 0 COMMENT '创建时间',
+PRIMARY KEY (`id`),
+KEY `idx_module` (`module`),
+KEY `idx_action` (`action`),
+KEY `idx_operator_account` (`operator_account`),
+KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='操作日志';
+
 CREATE TABLE `role` (
 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
 `role_name` varchar(50) NOT NULL DEFAULT '' COMMENT '角色名称',
@@ -78,10 +98,12 @@ CREATE TABLE `page` (
 `button_code` varchar(50) NOT NULL DEFAULT '' COMMENT '按钮编码 query/create/update/delete',
 `api_method` varchar(16) NOT NULL DEFAULT '' COMMENT 'HTTP方法 GET/POST/PUT/DELETE',
 `api_path` varchar(255) NOT NULL DEFAULT '' COMMENT 'Gin FullPath，如 /api/admin/account/:id',
+`sort` int(11) NOT NULL DEFAULT 0 COMMENT '展示排序，数字越大越靠前',
 `create_time` int(11) NOT NULL DEFAULT 0 COMMENT '创建时间',
 PRIMARY KEY (`id`),
 KEY `idx_parent_id` (`parent_id`),
-KEY `idx_api` (`api_method`, `api_path`)
+KEY `idx_api` (`api_method`, `api_path`),
+KEY `idx_sort` (`sort`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1  DEFAULT CHARSET=utf8 COMMENT='页面菜单与按钮';
 
 -- ========== 初始角色：系统管理员 ==========
@@ -104,7 +126,8 @@ INSERT INTO `page` (`id`,`page_name`,`url`,`parent_id`,`page_level`,`page_type`,
 (2, '账号管理', '/system/account', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
 (3, '角色管理', '/system/role', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
 (4, '页面管理', '/system/page', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
-(5, '登录日志', '/system/login-log', 1, 2, 1, '', '', '', UNIX_TIMESTAMP());
+(5, '登录日志', '/system/login-log', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
+(6, '操作日志', '/system/operation-log', 1, 2, 1, '', '', '', UNIX_TIMESTAMP());
 
 INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
 ('查询', '', 2, 3, 2, 'query',  'GET',    '/api/admin/account',     UNIX_TIMESTAMP()),
@@ -132,6 +155,9 @@ INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`butt
 
 INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
 ('查询', '', 5, 3, 2, 'query', 'GET', '/api/admin/login/log', UNIX_TIMESTAMP());
+
+INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
+('查询', '', 6, 3, 2, 'query', 'GET', '/api/admin/operation/log', UNIX_TIMESTAMP());
 
 -- ========== 系统管理员拥有全部菜单与按钮 ==========
 INSERT INTO `role_page` (`role_id`,`page_id`)

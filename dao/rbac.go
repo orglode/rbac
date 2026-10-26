@@ -114,7 +114,7 @@ func (d *Rabc) GetPageList(ctx context.Context, page Paging) ([]*model.Page, int
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	if err := db.Offset(page.Offset()).Limit(page.Size).Order("id desc").Find(&data).Error; err != nil {
+	if err := db.Offset(page.Offset()).Limit(page.Size).Order("sort DESC, create_time DESC").Find(&data).Error; err != nil {
 		return nil, 0, err
 	}
 	if db.Error != nil {
@@ -125,7 +125,7 @@ func (d *Rabc) GetPageList(ctx context.Context, page Paging) ([]*model.Page, int
 
 func (d *Rabc) GetAllPage(ctx context.Context) ([]*model.Page, error) {
 	data := make([]*model.Page, 0)
-	db := d.db.Slave(ctx).Table(model.RbacPageTable).Find(&data)
+	db := d.db.Slave(ctx).Table(model.RbacPageTable).Order("sort DESC, create_time DESC").Find(&data)
 	if err := db.Error; err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func (d *Rabc) AddPage(ctx context.Context, page *model.Page) error {
 
 func (d *Rabc) GetAllPageByIds(ctx context.Context, roleIds []int64) ([]*model.Page, error) {
 	data := make([]*model.Page, 0)
-	db := d.db.Slave(ctx).Table(model.RbacPageTable).Where("id in(?)", roleIds).Find(&data)
+	db := d.db.Slave(ctx).Table(model.RbacPageTable).Where("id in(?)", roleIds).Order("sort DESC, create_time DESC").Find(&data)
 	if err := db.Error; err != nil {
 		return nil, err
 	}
@@ -150,7 +150,10 @@ func (d *Rabc) GetAllPageByIds(ctx context.Context, roleIds []int64) ([]*model.P
 }
 
 func (d *Rabc) UpdatePage(ctx context.Context, page *model.Page) error {
-	db := d.db.Master(ctx).Table(model.RbacPageTable).Where("id=?", page.Id).Updates(page)
+	// Select 显式字段，保证 sort=0 也能更新
+	db := d.db.Master(ctx).Table(model.RbacPageTable).Where("id=?", page.Id).
+		Select("page_name", "url", "parent_id", "page_level", "page_type", "button_code", "api_method", "api_path", "sort").
+		Updates(page)
 	if err := db.Error; err != nil {
 		return err
 	}
@@ -362,6 +365,37 @@ func (d *Rabc) GetLoginLogList(ctx context.Context, query model.LoginLogQuery) (
 	if page.Size <= 0 {
 		page.Size = 20
 	}
+	if err := db.Offset(page.Offset()).Limit(page.Size).Order("id DESC").Find(&result).Error; err != nil {
+		return nil, 0, err
+	}
+	return result, count, nil
+}
+
+func (d *Rabc) CreateOperationLog(ctx context.Context, log *model.OperationLog) error {
+	return d.db.Master(ctx).Table(model.OperationLogTable).Create(log).Error
+}
+
+func (d *Rabc) GetOperationLogList(ctx context.Context, query model.OperationLogQuery) ([]*model.OperationLog, int64, error) {
+	var count int64
+	result := make([]*model.OperationLog, 0)
+	db := d.db.Slave(ctx).Table(model.OperationLogTable)
+	if query.Module > 0 {
+		db = db.Where("module=?", query.Module)
+	}
+	if query.Action > 0 {
+		db = db.Where("action=?", query.Action)
+	}
+	if query.OperatorAccount != "" {
+		db = db.Where("operator_account LIKE ?", "%"+query.OperatorAccount+"%")
+	}
+	if query.TargetName != "" {
+		db = db.Where("target_name LIKE ?", "%"+query.TargetName+"%")
+	}
+	if err := db.Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+	page := Paging{Page: query.Page, Size: query.Size}
+	page.Normalize()
 	if err := db.Offset(page.Offset()).Limit(page.Size).Order("id DESC").Find(&result).Error; err != nil {
 		return nil, 0, err
 	}

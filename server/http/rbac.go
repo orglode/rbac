@@ -21,17 +21,12 @@ func registerRbacRoutes(r *gin.Engine) {
 	r.POST("/api/admin/login", adminLogin)
 	admin := r.Group("/api/admin/", jwt.AuthMiddleware(), PermissionMiddleware())
 	{
-		// 当前登录用户菜单/按钮（白名单，供前端渲染）
-		admin.GET("me/menu", adminMyMenu)
-		admin.GET("me/buttons", adminMyButtons)
-
-		// 后台账号类
+		// 账号类
 		admin.GET("account", adminAccountList)
 		admin.POST("account", adminAddAccount)
 		admin.PUT("account/:id", adminUpdateAccount)
 		admin.DELETE("account/:id", adminDeleteAccount)
-		// 登录日志
-		admin.GET("login/log", adminLoginLogList)
+
 		// 角色类
 		admin.GET("role", adminRoleList)
 		admin.GET("role/all", adminAllRole)
@@ -52,6 +47,15 @@ func registerRbacRoutes(r *gin.Engine) {
 		// 账户角色关联
 		admin.POST("account/role", adminAddAccountRole)
 		admin.DELETE("account/role", adminDelAccountRole)
+
+		// 当前登录用户菜单/按钮（白名单，供前端渲染）
+		admin.GET("me/menu", adminMyMenu)
+		admin.GET("me/buttons", adminMyButtons)
+
+		// 登录日志
+		admin.GET("login/log", adminLoginLogList)
+		admin.GET("operation/log", adminOperationLogList)
+
 	}
 }
 
@@ -134,6 +138,21 @@ func adminLoginLogList(c *gin.Context) {
 		return
 	}
 	data, err := svc.RbacService.GetLoginLogList(c.Request.Context(), req)
+	if err != nil {
+		standardOutput(c, err)
+		return
+	}
+	responseSuccess(c, data)
+}
+
+// 操作日志列表（角色变更、页面权限变更等）
+func adminOperationLogList(c *gin.Context) {
+	req := model.OperationLogQuery{}
+	if err := c.ShouldBindQuery(&req); err != nil {
+		responseError(c, invalidParam)
+		return
+	}
+	data, err := svc.RbacService.GetOperationLogList(c.Request.Context(), req)
 	if err != nil {
 		standardOutput(c, err)
 		return
@@ -254,7 +273,7 @@ func adminAllRole(c *gin.Context) {
 }
 
 func adminAddRole(c *gin.Context) {
-	ctx := c.Request.Context()
+	ctx := withOperator(c)
 	req := &model.Role{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		responseError(c, invalidParam)
@@ -269,7 +288,7 @@ func adminAddRole(c *gin.Context) {
 }
 
 func adminModifyRole(c *gin.Context) {
-	ctx := c.Request.Context()
+	ctx := withOperator(c)
 	req := &model.Role{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		responseError(c, invalidParam)
@@ -289,7 +308,7 @@ func adminModifyRole(c *gin.Context) {
 }
 
 func adminDelRole(c *gin.Context) {
-	ctx := c.Request.Context()
+	ctx := withOperator(c)
 	id := getInt64(c, "id")
 	if id <= 0 {
 		responseError(c, invalidParam)
@@ -328,7 +347,7 @@ func adminPage(c *gin.Context) {
 }
 
 func adminAddPage(c *gin.Context) {
-	ctx := c.Request.Context()
+	ctx := withOperator(c)
 	req := &model.Page{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		responseError(c, invalidParam)
@@ -343,7 +362,7 @@ func adminAddPage(c *gin.Context) {
 }
 
 func adminModifyPage(c *gin.Context) {
-	ctx := c.Request.Context()
+	ctx := withOperator(c)
 	req := &model.Page{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		responseError(c, invalidParam)
@@ -363,7 +382,7 @@ func adminModifyPage(c *gin.Context) {
 }
 
 func adminDelPage(c *gin.Context) {
-	ctx := c.Request.Context()
+	ctx := withOperator(c)
 	id := getInt64(c, "id")
 	if id <= 0 {
 		responseError(c, invalidParam)
@@ -394,7 +413,7 @@ func adminRolePageList(c *gin.Context) {
 }
 
 func adminAddRolePage(c *gin.Context) {
-	ctx := c.Request.Context()
+	ctx := withOperator(c)
 	req := &model.RolePageRequest{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		responseError(c, invalidParam)
@@ -409,7 +428,7 @@ func adminAddRolePage(c *gin.Context) {
 }
 
 func adminAddAccountRole(c *gin.Context) {
-	ctx := c.Request.Context()
+	ctx := withOperator(c)
 	req := &model.AccountRole{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		responseError(c, invalidParam)
@@ -424,7 +443,7 @@ func adminAddAccountRole(c *gin.Context) {
 }
 
 func adminDelAccountRole(c *gin.Context) {
-	ctx := c.Request.Context()
+	ctx := withOperator(c)
 	req := &model.AccountRoleReq{}
 	if err := c.ShouldBindJSON(req); err != nil {
 		responseError(c, invalidParam)

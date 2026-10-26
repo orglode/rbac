@@ -27,7 +27,7 @@
 | page_type | page_level | 含义 |
 |-----------|------------|------|
 | 1 菜单 | 1 | 一级菜单 |
-| 1 菜单 | 2 | 二级菜单（挂前端路由 `url`） |
+| 1 菜单 | 2 | 二级菜单（挂页面路由 `url`） |
 | 2 按钮 | 3 | 按钮；绑定一个 API：`api_method` + `api_path` |
 
 默认 CRUD 按钮编码：
@@ -261,6 +261,48 @@
 
 对应按钮：`GET /api/admin/login/log`（菜单「登录日志」）。
 
+### 3.6 操作日志
+
+`GET /api/admin/operation/log?page=1&size=20&module=&action=&operator_account=&target_name=`
+
+可选筛选：
+
+| 参数 | 说明 |
+|------|------|
+| module | 1角色 2角色页面权限 3账号角色 4页面资源 |
+| action | 1新增 2修改 3删除 4分配 5移除 |
+| operator_account | 操作人账号模糊 |
+| target_name | 目标名称模糊 |
+
+自动写入场景：角色增删改、页面增删改、角色页面权限分配、账号被分配/变更/移除角色。
+
+账号角色日志示例：`账号「张三(zhangsan)」被分配角色「运营」`；变更时为 `角色由「A」变更为「B」`。
+
+**响应 data**
+
+```json
+{
+  "list": [
+    {
+      "id": 1,
+      "module": 1,
+      "action": 1,
+      "target_type": "role",
+      "target_id": 2,
+      "target_name": "运营",
+      "content": "新增角色：运营",
+      "operator_id": 1,
+      "operator_name": "管理员",
+      "operator_account": "admin",
+      "create_time": 1710000000
+    }
+  ],
+  "total": 1
+}
+```
+
+对应按钮：`GET /api/admin/operation/log`（菜单「操作日志」）。
+
 ---
 
 ## 4. 角色管理
@@ -358,11 +400,13 @@
   "parent_id": 1,
   "page_level": 2,
   "page_type": 1,
+  "sort": 10,
   "api_prefix": "/api/admin/account"
 }
 ```
 
 - `page_type` 默认 `1`（菜单）。
+- `sort`：展示排序，**数字越大越靠前**；相同时按 `create_time` 倒序（默认 0）。
 - 二级菜单且传入 `api_prefix` 时，**自动创建** 查询/新增/修改/删除 四个按钮（level=3）。
 - `api_prefix` 不入库，仅创建时使用。
 
@@ -382,7 +426,9 @@
 
 ### 5.3 全量扁平字段（`/page/all`）
 
-含：`id, page_name, url, parent_id, page_level, page_type, button_code, api_method, api_path, create_time`。
+含：`id, page_name, url, parent_id, page_level, page_type, button_code, api_method, api_path, sort, create_time`。
+
+列表/菜单树统一按 `sort DESC, create_time DESC` 排序。
 
 ---
 

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -130,6 +131,10 @@ func getInt64(c *gin.Context, key string) int64 {
 }
 
 // getUserId 获取用户ID
+func withOperator(c *gin.Context) context.Context {
+	return context.WithValue(c.Request.Context(), model.CtxOperatorID, getUid(c))
+}
+
 func getUid(c *gin.Context) int64 {
 	// 从上下文中获取用户ID，具体实现依赖于你的认证中间件
 	val, exists := c.Get("uid")

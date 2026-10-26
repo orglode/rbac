@@ -37,6 +37,19 @@ type LoginLogQuery struct {
 	Status        int    `json:"status" form:"status"`
 }
 
+type OperationLogQuery struct {
+	Paging
+	Module          int    `json:"module" form:"module"`
+	Action          int    `json:"action" form:"action"`
+	OperatorAccount string `json:"operator_account" form:"operator_account"`
+	TargetName      string `json:"target_name" form:"target_name"`
+}
+
+// CtxOperatorID 写入 request context，供操作日志取操作人
+type ctxKey string
+
+const CtxOperatorID ctxKey = "operator_id"
+
 type LoginMeta struct {
 	LoginIp   string
 	UserAgent string
@@ -58,6 +71,8 @@ type PageInfo struct {
 	ButtonCode string      `json:"button_code,omitempty"`
 	ApiMethod  string      `json:"api_method,omitempty"`
 	ApiPath    string      `json:"api_path,omitempty"`
+	Sort       int         `json:"sort"`
+	CreateTime int64       `json:"create_time,omitempty"`
 	ChildPage  []*PageInfo `json:"child_page"`
 	Buttons    []*PageInfo `json:"buttons,omitempty"`
 }

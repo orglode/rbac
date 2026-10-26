@@ -23,7 +23,7 @@ Vite 已将 `/api` 代理到 `http://127.0.0.1:23200`。
 ```
 src/
   app/           # 应用壳：路由、布局
-  features/      # 按功能：auth / account / role / page / login-log
+  features/      # 按功能：auth / account / role / page / login-log / operation-log
   stores/        # 仅用户会话与菜单（克制）
   shared/        # http、类型、工具
 ```

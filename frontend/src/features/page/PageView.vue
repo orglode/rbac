@@ -18,6 +18,7 @@ interface TreeRow {
   button_code?: string
   api_method?: string
   api_path?: string
+  sort: number
   children?: TreeRow[]
 }
 
@@ -45,6 +46,7 @@ const form = reactive({
   api_method: '',
   api_path: '',
   api_prefix: '',
+  sort: 0,
 })
 
 const rules: FormRules = {
@@ -72,6 +74,7 @@ function toTreeRow(node: PageInfo): TreeRow {
     button_code: node.button_code,
     api_method: node.api_method,
     api_path: node.api_path,
+    sort: node.sort ?? 0,
     children: children.length ? children : undefined,
   }
 }
@@ -121,6 +124,7 @@ function openCreate() {
     api_method: '',
     api_path: '',
     api_prefix: '',
+    sort: 0,
   })
   loadParents()
   dialogVisible.value = true
@@ -138,11 +142,15 @@ function openEdit(row: TreeRow) {
     api_method: row.api_method || '',
     api_path: row.api_path || '',
     api_prefix: '',
+    sort: row.sort ?? 0,
   })
   // 从全量列表回填 parent_id
   loadParents().then(() => {
     const self = parents.value.find((p) => p.id === row.id)
-    if (self) form.parent_id = self.parent_id
+    if (self) {
+      form.parent_id = self.parent_id
+      form.sort = self.sort ?? row.sort ?? 0
+    }
   })
   dialogVisible.value = true
 }
@@ -169,6 +177,7 @@ async function submit() {
     button_code: form.button_code,
     api_method: form.api_method,
     api_path: form.api_path,
+    sort: form.sort,
   }
   if (!form.id && form.page_level === 2 && form.api_prefix) {
     payload.api_prefix = form.api_prefix
@@ -236,7 +245,8 @@ onMounted(load)
       <el-table-column label="类型" width="80">
         <template #default="{ row }">{{ typeLabel[row.page_type] || row.page_type }}</template>
       </el-table-column>
-      <el-table-column prop="page_path" label="路由" min-width="140" />
+      <el-table-column prop="page_path" label="页面路由" min-width="140" />
+      <el-table-column prop="sort" label="排序" width="80" />
       <el-table-column prop="button_code" label="按钮编码" width="110" />
       <el-table-column label="API" min-width="220">
         <template #default="{ row }">
@@ -284,8 +294,12 @@ onMounted(load)
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="form.page_type === 1" label="前端路由">
+        <el-form-item v-if="form.page_type === 1" label="页面路由">
           <el-input v-model="form.url" placeholder="/system/xxx" />
+        </el-form-item>
+        <el-form-item label="排序">
+          <el-input-number v-model="form.sort" :step="1" controls-position="right" style="width: 100%" />
+          <div class="form-tip">数字越大越靠前；相同则按创建时间倒序</div>
         </el-form-item>
         <el-form-item v-if="!form.id && form.page_level === 2" label="API 前缀">
           <el-input v-model="form.api_prefix" placeholder="/api/admin/xxx（自动生成 CRUD 按钮）" />
@@ -320,5 +334,11 @@ onMounted(load)
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
+}
+.form-tip {
+  margin-top: 4px;
+  color: #909399;
+  font-size: 12px;
+  line-height: 1.4;
 }
 </style>

@@ -19,6 +19,8 @@ export interface PageInfo {
   button_code?: string
   api_method?: string
   api_path?: string
+  sort?: number
+  create_time?: number
   child_page: PageInfo[]
   buttons?: PageInfo[]
 }
@@ -69,6 +71,7 @@ export interface MenuPage {
   button_code: string
   api_method: string
   api_path: string
+  sort: number
   create_time: number
   parent_name?: string
 }
@@ -81,5 +84,19 @@ export interface LoginLog {
   user_agent: string
   status: number
   message: string
+  create_time: number
+}
+
+export interface OperationLog {
+  id: number
+  module: number
+  action: number
+  target_type: string
+  target_id: number
+  target_name: string
+  content: string
+  operator_id: number
+  operator_name: string
+  operator_account: string
   create_time: number
 }

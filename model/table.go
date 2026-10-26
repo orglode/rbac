@@ -3,6 +3,7 @@ package model
 const (
 	AccountTable         = "account"
 	LoginLogTable        = "login_log"
+	OperationLogTable    = "operation_log"
 	RbacRoleTable        = "role"
 	RbacPageTable        = "page"
 	RbacRolePageTable    = "role_page"
@@ -52,6 +53,38 @@ type LoginLog struct {
 	Status        int    `gorm:"column:status;type:tinyint(4);not null;default:0" json:"status"` // 1成功 2失败
 	Message       string `gorm:"column:message;type:varchar(100);not null;default:''" json:"message"`
 	CreateTime    int64  `gorm:"column:create_time;type:int(11);not null;default:0" json:"create_time"`
+}
+
+// 操作日志模块
+const (
+	OpModuleRole     = 1 // 角色
+	OpModuleRolePage = 2 // 角色页面权限
+	OpModuleAccount  = 3 // 账号角色
+	OpModulePage     = 4 // 页面资源
+)
+
+// 操作类型
+const (
+	OpActionCreate = 1 // 新增
+	OpActionUpdate = 2 // 修改
+	OpActionDelete = 3 // 删除
+	OpActionAssign = 4 // 分配/绑定
+	OpActionRemove = 5 // 移除
+)
+
+// OperationLog RBAC 操作日志（角色变更、页面权限变更等）
+type OperationLog struct {
+	Id              int64  `gorm:"column:id;type:int(11);primary_key;not null;auto_increment" json:"id"`
+	Module          int    `gorm:"column:module;type:tinyint(4);not null;default:0" json:"module"`
+	Action          int    `gorm:"column:action;type:tinyint(4);not null;default:0" json:"action"`
+	TargetType      string `gorm:"column:target_type;type:varchar(32);not null;default:''" json:"target_type"`
+	TargetId        int64  `gorm:"column:target_id;type:int(11);not null;default:0" json:"target_id"`
+	TargetName      string `gorm:"column:target_name;type:varchar(100);not null;default:''" json:"target_name"`
+	Content         string `gorm:"column:content;type:varchar(500);not null;default:''" json:"content"`
+	OperatorId      int64  `gorm:"column:operator_id;type:int(11);not null;default:0" json:"operator_id"`
+	OperatorName    string `gorm:"column:operator_name;type:varchar(50);not null;default:''" json:"operator_name"`
+	OperatorAccount string `gorm:"column:operator_account;type:varchar(50);not null;default:''" json:"operator_account"`
+	CreateTime      int64  `gorm:"column:create_time;type:int(11);not null;default:0" json:"create_time"`
 }
 
 // Role 用户角色表
@@ -114,6 +147,8 @@ type Page struct {
 	ApiMethod string `gorm:"column:api_method;type:varchar(16);not null;default:''" json:"api_method" form:"api_method"`
 	// ApiPath 对应 Gin FullPath，如 /api/admin/account/:id
 	ApiPath string `gorm:"column:api_path;type:varchar(255);not null;default:''" json:"api_path" form:"api_path"`
+	// Sort 展示排序，数字越大越靠前；同值按创建时间倒序
+	Sort int `gorm:"column:sort;type:int(11);not null;default:0" json:"sort" form:"sort"`
 	// CreateTime 创建时间
 	CreateTime int64 `gorm:"column:create_time;type:int(11);not null" json:"create_time" form:"create_time"`
 	// ApiPrefix 创建二级菜单时传入，自动挂 CRUD 按钮；不入库
