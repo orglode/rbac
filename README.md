@@ -22,7 +22,7 @@ rbac/
 ├── api/               # API 相关代码
 │   ├── error/         # 错误定义
 │   ├── jwt/           # JWT 认证
-│   └── sql.sql        # SQL 脚本
+│   └── rbac.sql       # SQL 脚本
 ├── app/               # 应用入口
 │   ├── config/        # 配置文件
 │   └── main.go        # 主入口文件
@@ -126,7 +126,7 @@ rbac/
    ```
 
 4. **初始化数据库**
-   执行 `api/sql.sql` 文件中的 SQL 语句，创建数据库表结构。
+   执行 `api/rbac.sql` 文件中的 SQL 语句，创建数据库表结构与初始菜单。
 
 ### 构建与运行
 

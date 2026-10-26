@@ -9,7 +9,7 @@ var (
 	// ======================base code =========================//
 	Success          = &AppError{Code: 0, Message: "success"}
 	MissingParameter = &AppError{Code: 499, Message: "缺少参数"}
-	InternalError    = &AppError{Code: 500, Message: "网络异常请稍后重试"}
+	InternalError    = &AppError{Code: 500, Message: "网络开小差了 请稍后重试"}
 
 	// ======================base code =========================//
 
@@ -19,6 +19,7 @@ var (
 	RbacInvalidPermission    = &AppError{Code: 602, Message: "权限无效"}
 	RbacMobileExists         = &AppError{Code: 603, Message: "手机号已存在"}
 	LoginPassWord            = &AppError{Code: 604, Message: "账号密码错误"}
+	AccountDisabled          = &AppError{Code: 605, Message: "账号已禁用"}
 )
 
 type AppError struct {

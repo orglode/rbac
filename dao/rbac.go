@@ -152,6 +152,64 @@ func (d *Rabc) DeletePage(ctx context.Context, id int64) error {
 	return nil
 }
 
+func (d *Rabc) DeletePageByParentId(ctx context.Context, parentId int64) error {
+	return d.db.Master(ctx).Table(model.RbacPageTable).Where("parent_id=?", parentId).Delete(&model.Page{}).Error
+}
+
+func (d *Rabc) GetPageById(ctx context.Context, id int64) (*model.Page, error) {
+	data := &model.Page{}
+	err := d.db.Slave(ctx).Table(model.RbacPageTable).Where("id=?", id).First(data).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return data, nil
+}
+
+func (d *Rabc) GetChildPages(ctx context.Context, parentId int64) ([]*model.Page, error) {
+	data := make([]*model.Page, 0)
+	err := d.db.Slave(ctx).Table(model.RbacPageTable).Where("parent_id=?", parentId).Find(&data).Error
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+// GetButtonByApi 按 method+path 查找按钮权限点
+func (d *Rabc) GetButtonByApi(ctx context.Context, method, path string) (*model.Page, error) {
+	data := &model.Page{}
+	err := d.db.Slave(ctx).Table(model.RbacPageTable).
+		Where("page_type=? AND api_method=? AND api_path=?", model.PageTypeButton, method, path).
+		First(data).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return data, nil
+}
+
+// ExistRolePage 角色是否拥有某页面/按钮
+func (d *Rabc) ExistRolePage(ctx context.Context, roleId, pageId int64) (bool, error) {
+	var count int64
+	err := d.db.Slave(ctx).Table(model.RbacRolePageTable).
+		Where("role_id=? AND page_id=?", roleId, pageId).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (d *Rabc) DeleteRolePageByPageIds(ctx context.Context, pageIds []int64) error {
+	if len(pageIds) == 0 {
+		return nil
+	}
+	return d.db.Master(ctx).Table(model.RbacRolePageTable).Where("page_id in(?)", pageIds).Delete(&model.RolePage{}).Error
+}
+
 func (d *Rabc) GetAllPageRoleId(ctx context.Context, id int64) ([]*model.RolePage, error) {
 	data := make([]*model.RolePage, 0)
 	db := d.db.Slave(ctx).Table(model.RbacRolePageTable).Where("role_id=?", id).Find(&data)
@@ -252,9 +310,47 @@ func (d *Rabc) AddAccountRole(ctx context.Context, role *model.AccountRole) erro
 }
 
 func (d *Rabc) DelAccountRole(ctx context.Context, accountId int64) error {
-	db := d.db.Master(ctx).Table(model.RbacAccountRoleTable).Where("account_id=? ", accountId).Delete(&model.Role{})
+	db := d.db.Master(ctx).Table(model.RbacAccountRoleTable).Where("account_id=? ", accountId).Delete(&model.AccountRole{})
 	if err := db.Error; err != nil {
 		return err
 	}
 	return nil
+}
+
+func (d *Rabc) UpdateAccountLastLoginTime(ctx context.Context, id int64, ts int64) error {
+	return d.db.Master(ctx).Table(model.AccountTable).Where("id=?", id).
+		Updates(map[string]interface{}{"last_login_time": ts, "update_time": ts}).Error
+}
+
+func (d *Rabc) CreateLoginLog(ctx context.Context, log *model.LoginLog) error {
+	return d.db.Master(ctx).Table(model.LoginLogTable).Create(log).Error
+}
+
+func (d *Rabc) GetLoginLogList(ctx context.Context, query model.LoginLogQuery) ([]*model.LoginLog, int64, error) {
+	var count int64
+	result := make([]*model.LoginLog, 0)
+	db := d.db.Slave(ctx).Table(model.LoginLogTable)
+	if query.AccountId > 0 {
+		db = db.Where("account_id=?", query.AccountId)
+	}
+	if query.AccountNumber != "" {
+		db = db.Where("account_number=?", query.AccountNumber)
+	}
+	if query.Status > 0 {
+		db = db.Where("status=?", query.Status)
+	}
+	if err := db.Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+	page := Paging{Page: query.Page, Size: query.Size}
+	if page.Page <= 0 {
+		page.Page = 1
+	}
+	if page.Size <= 0 {
+		page.Size = 20
+	}
+	if err := db.Offset(page.Offset()).Limit(page.Size).Order("id DESC").Find(&result).Error; err != nil {
+		return nil, 0, err
+	}
+	return result, count, nil
 }

@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	error2 "rbac/api/error"
 	"rbac/conf"
@@ -15,7 +16,8 @@ import (
 )
 
 var (
-	svc *service.Service
+	svc          *service.Service
+	invalidParam = error2.MissingParameter // 参数错误
 )
 
 func Init(s *service.Service, conf *conf.Config) {
@@ -61,13 +63,12 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 			if errors.As(err, &appErr) {
 				responseError(c, appErr)
 			} else {
-				systemErr := error2.InternalError
-				if conf.ConfGlobal.Server.Env == model.EnvTest {
-					systemErr.Err = err
-					responseError(c, systemErr)
-				} else {
-					responseError(c, systemErr)
-				}
+				// 非业务错误，包装为内部错误，不改动全局 InternalError
+				responseError(c, &error2.AppError{
+					Code:    error2.InternalError.Code,
+					Message: error2.InternalError.Message,
+					Err:     err,
+				})
 			}
 			return
 		}
@@ -87,18 +88,17 @@ func responseSuccess(c *gin.Context, data interface{}) {
 
 // ResponseError 错误响应
 func responseError(c *gin.Context, apiErr *error2.AppError) {
-	var code int
-	var errMsg string
-	if apiErr != nil && apiErr.Err == nil {
-		code = error2.InternalError.Code
-		errMsg = error2.InternalError.Message
-	} else {
-		code = error2.InternalError.Code
-		errMsg = error2.InternalError.Err.Error()
+	if apiErr == nil {
+		apiErr = error2.InternalError
+	}
+	errMsg := apiErr.Message
+	// 测试环境下附带底层错误，便于排查
+	if apiErr.Err != nil && conf.ConfGlobal.Server.Env == model.EnvTest {
+		errMsg = fmt.Sprintf("%s: %v", errMsg, apiErr.Err)
 	}
 
 	c.JSON(http.StatusOK, model.HttpResponse{
-		Code:    code,
+		Code:    apiErr.Code,
 		Message: errMsg,
 		Data:    nil,
 		TraceId: c.GetString("trace_id"),

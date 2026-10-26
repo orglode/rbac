@@ -39,8 +39,8 @@ func NewDao(conf *conf.Config) *Dao {
 }
 
 // Transaction 事务
-func (d *Dao) Transaction(ctx context.Context, fn func(tx *gorm.DB)) error {
-	return nil
+func (d *Dao) Transaction(ctx context.Context, fn func(tx *gorm.DB) error) error {
+	return d.db.Master(ctx).Transaction(fn)
 }
 
 type Mysql struct {

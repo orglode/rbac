@@ -1,21 +1,37 @@
 package http
 
 import (
+	"strings"
+
+	error2 "rbac/api/error"
 	"rbac/api/jwt"
 	"rbac/model"
 
 	"github.com/gin-gonic/gin"
 )
 
+// 无需按钮鉴权的接口（仍需登录，login 本身不在此组）
+var permissionWhitelist = map[string]struct{}{
+	"GET /api/admin/heath":      {},
+	"GET /api/admin/me/menu":    {},
+	"GET /api/admin/me/buttons": {},
+}
+
 func registerRbacRoutes(r *gin.Engine) {
 	r.POST("/api/admin/login", adminLogin)
-	admin := r.Group("/api/admin/", jwt.AuthMiddleware())
+	admin := r.Group("/api/admin/", jwt.AuthMiddleware(), PermissionMiddleware())
 	{
+		// 当前登录用户菜单/按钮（白名单，供前端渲染）
+		admin.GET("me/menu", adminMyMenu)
+		admin.GET("me/buttons", adminMyButtons)
+
 		// 后台账号类
 		admin.GET("account", adminAccountList)
 		admin.POST("account", adminAddAccount)
 		admin.PUT("account/:id", adminUpdateAccount)
 		admin.DELETE("account/:id", adminDeleteAccount)
+		// 登录日志
+		admin.GET("login/log", adminLoginLogList)
 		// 角色类
 		admin.GET("role", adminRoleList)
 		admin.GET("role/all", adminAllRole)
@@ -38,6 +54,40 @@ func registerRbacRoutes(r *gin.Engine) {
 		admin.DELETE("account/role", adminDelAccountRole)
 	}
 }
+
+// PermissionMiddleware 按按钮绑定的 API（method + FullPath）校验权限
+func PermissionMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		uid := getUid(c)
+		if uid <= 0 {
+			responseError(c, error2.RbacInvalidPermission)
+			c.Abort()
+			return
+		}
+
+		method := strings.ToUpper(c.Request.Method)
+		fullPath := c.FullPath()
+		if fullPath == "" {
+			c.Next()
+			return
+		}
+
+		key := method + " " + fullPath
+		if _, ok := permissionWhitelist[key]; ok {
+			c.Next()
+			return
+		}
+
+		if err := svc.RbacService.CheckApiPermission(c.Request.Context(), uid, method, fullPath); err != nil {
+			standardOutput(c, err)
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
+
 
 // 删除用户
 func adminAccountInfo(c *gin.Context) {
@@ -64,12 +114,31 @@ func adminLogin(c *gin.Context) {
 		responseError(c, invalidParam)
 		return
 	}
-	account, err := svc.RbacService.LoginAccount(c, req.AccountNumber, req.Password)
+	meta := model.LoginMeta{
+		LoginIp:   c.ClientIP(),
+		UserAgent: c.Request.UserAgent(),
+	}
+	account, err := svc.RbacService.LoginAccount(c.Request.Context(), req.AccountNumber, req.Password, meta)
 	if err != nil {
 		standardOutput(c, err)
 		return
 	}
 	responseSuccess(c, account)
+}
+
+// 登录日志列表
+func adminLoginLogList(c *gin.Context) {
+	req := model.LoginLogQuery{}
+	if err := c.ShouldBindQuery(&req); err != nil {
+		responseError(c, invalidParam)
+		return
+	}
+	data, err := svc.RbacService.GetLoginLogList(c.Request.Context(), req)
+	if err != nil {
+		standardOutput(c, err)
+		return
+	}
+	responseSuccess(c, data)
 }
 
 // 用户列表
@@ -105,7 +174,12 @@ func adminAddAccount(c *gin.Context) {
 // 更新用户
 func adminUpdateAccount(c *gin.Context) {
 	var req model.Account
-	if err := c.ShouldBindJSON(&req); err != nil || req.Id <= 0 {
+	if err := c.ShouldBindJSON(&req); err != nil {
+		responseError(c, invalidParam)
+		return
+	}
+	req.Id = getInt64(c, "id")
+	if req.Id <= 0 {
 		responseError(c, invalidParam)
 		return
 	}
@@ -115,6 +189,28 @@ func adminUpdateAccount(c *gin.Context) {
 		return
 	}
 	responseSuccess(c, account)
+}
+
+// 当前用户菜单树（含二级菜单下的 buttons）
+func adminMyMenu(c *gin.Context) {
+	uid := getUid(c)
+	data, err := svc.RbacService.GetUserRolePage(c.Request.Context(), uid)
+	if err != nil {
+		standardOutput(c, err)
+		return
+	}
+	responseSuccess(c, data)
+}
+
+// 当前用户按钮权限列表
+func adminMyButtons(c *gin.Context) {
+	uid := getUid(c)
+	data, err := svc.RbacService.GetMyButtons(c.Request.Context(), uid)
+	if err != nil {
+		standardOutput(c, err)
+		return
+	}
+	responseSuccess(c, data)
 }
 
 // 删除用户
@@ -272,6 +368,7 @@ func adminDelPage(c *gin.Context) {
 	id := getInt64(c, "id")
 	if id <= 0 {
 		responseError(c, invalidParam)
+		return
 	}
 	err := svc.RbacService.DeletePage(ctx, id)
 	if err != nil {

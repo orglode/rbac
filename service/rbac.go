@@ -70,6 +70,9 @@ func (s *RbacService) AddAccount(ctx context.Context, user *model.Account) (int6
 
 	hash := md5.Sum([]byte(user.Password))
 	user.Password = hex.EncodeToString(hash[:])
+	if user.Status == 0 {
+		user.Status = model.AccountStatusEnable
+	}
 	result, err := s.dao.Rbac.CreateAccount(ctx, user)
 	if err != nil {
 		return 0, err
@@ -111,14 +114,37 @@ func (s *RbacService) DeleteAccount(ctx context.Context, id int64) error {
 	return s.dao.Rbac.DeleteAccount(ctx, id)
 }
 
-func (s *RbacService) LoginAccount(ctx context.Context, accountNumber, password string) (*model.AccountLoginResult, error) {
+func (s *RbacService) LoginAccount(ctx context.Context, accountNumber, password string, meta model.LoginMeta) (*model.AccountLoginResult, error) {
+	writeLog := func(accountId int64, status int, message string) {
+		_ = s.dao.Rbac.CreateLoginLog(ctx, &model.LoginLog{
+			AccountId:     accountId,
+			AccountNumber: accountNumber,
+			LoginIp:       meta.LoginIp,
+			UserAgent:     meta.UserAgent,
+			Status:        status,
+			Message:       message,
+			CreateTime:    time.Now().Unix(),
+		})
+	}
+
 	user, err := s.dao.Rbac.GetAccountByAccountNumber(ctx, accountNumber)
 	if err != nil {
-		return nil, err
-	}
-	if user.Password != password {
+		writeLog(0, model.LoginStatusFail, "账号不存在或密码错误")
 		return nil, apiErr.LoginPassWord
 	}
+	hash := md5.Sum([]byte(password))
+	if user.Password != hex.EncodeToString(hash[:]) {
+		writeLog(user.Id, model.LoginStatusFail, "账号密码错误")
+		return nil, apiErr.LoginPassWord
+	}
+	if user.Status == model.AccountStatusDisable {
+		writeLog(user.Id, model.LoginStatusFail, "账号已禁用")
+		return nil, apiErr.AccountDisabled
+	}
+
+	now := time.Now().Unix()
+	_ = s.dao.Rbac.UpdateAccountLastLoginTime(ctx, user.Id, now)
+	writeLog(user.Id, model.LoginStatusSuccess, "登录成功")
 
 	token, err := jwt.GenerateToken(user.Id)
 	if err != nil {
@@ -130,9 +156,18 @@ func (s *RbacService) LoginAccount(ctx context.Context, accountNumber, password 
 		UserName:      user.UserName,
 		Mobile:        user.Mobile,
 		AccountType:   user.AccountType,
-		LastLoginTime: user.LastLoginTime,
+		Status:        user.Status,
+		LastLoginTime: now,
 		CreateTime:    user.CreateTime,
 	}, nil
+}
+
+func (s *RbacService) GetLoginLogList(ctx context.Context, query model.LoginLogQuery) (*model.AccountListRest, error) {
+	data, total, err := s.dao.Rbac.GetLoginLogList(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	return &model.AccountListRest{List: data, Total: total}, nil
 }
 
 func (s *RbacService) GetUserRole(ctx context.Context, accountId int64) (*model.AccountInfo, error) {
@@ -156,14 +191,34 @@ func (s *RbacService) GetUserRole(ctx context.Context, accountId int64) (*model.
 }
 
 func (s *RbacService) GetUserRolePage(ctx context.Context, accountId int64) (interface{}, error) {
+	account, err := s.dao.Rbac.GetAccountById(ctx, accountId)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &model.AccountInfo{AccountId: accountId}
+
+	// 超级管理员：返回全部菜单/按钮树
+	if account.AccountType == model.AccountTypeAdmin {
+		pageData, err := s.dao.Rbac.GetAllPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		result.RoleName = "超级管理员"
+		result.PageInfo = s.buildMenuTreeV2(pageData)
+		return result, nil
+	}
+
 	accountRole, err := s.GetUserRole(ctx, accountId)
 	if err != nil {
 		return nil, err
 	}
 	if accountRole == nil {
-		return nil, nil
+		return result, nil
 	}
-	// 获取角色关联的下级菜单
+	result.RoleId = accountRole.RoleId
+	result.RoleName = accountRole.RoleName
+
 	pageIds, err := s.getRoleAllPage(ctx, accountRole.RoleId)
 	if err != nil {
 		return nil, err
@@ -172,8 +227,8 @@ func (s *RbacService) GetUserRolePage(ctx context.Context, accountId int64) (int
 	if err != nil {
 		return nil, err
 	}
-	accountRole.PageInfo = s.buildMenuTreeV2(pageData)
-	return accountRole, nil
+	result.PageInfo = s.buildMenuTreeV2(pageData)
+	return result, nil
 }
 
 func (s *RbacService) getRoleAllPage(ctx context.Context, roleId int64) ([]int64, error) {
@@ -209,47 +264,149 @@ func (s *RbacService) GetRolePage(ctx context.Context, roleId int64) (interface{
 }
 
 func (s *RbacService) buildMenuTreeV2(menus []*model.Page) []*model.PageInfo {
-	// 按层级分组
 	levelMap := make(map[int][]*model.Page)
 	for i := range menus {
 		menu := menus[i]
 		levelMap[menu.PageLevel] = append(levelMap[menu.PageLevel], menu)
 	}
 
-	// 从最底层开始构建
-	var roots []*model.PageInfo
-
-	// 先处理一级菜单
-	for _, menu := range levelMap[1] {
-		node := &model.PageInfo{
-			PageId:    menu.Id,
-			PageLevel: menu.PageLevel,
-			PageName:  menu.PageName,
-			PagePath:  menu.Url,
-			ChildPage: make([]*model.PageInfo, 0),
+	toInfo := func(menu *model.Page) *model.PageInfo {
+		return &model.PageInfo{
+			PageId:     menu.Id,
+			PageLevel:  menu.PageLevel,
+			PageName:   menu.PageName,
+			PagePath:   menu.Url,
+			PageType:   menu.PageType,
+			ButtonCode: menu.ButtonCode,
+			ApiMethod:  menu.ApiMethod,
+			ApiPath:    menu.ApiPath,
+			ChildPage:  make([]*model.PageInfo, 0),
+			Buttons:    make([]*model.PageInfo, 0),
 		}
-		roots = append(roots, node)
 	}
 
-	// 处理二级菜单
+	var roots []*model.PageInfo
+	secondMap := make(map[int64]*model.PageInfo) // pageId -> 二级菜单节点
+
+	for _, menu := range levelMap[1] {
+		if menu.PageType == model.PageTypeButton {
+			continue
+		}
+		roots = append(roots, toInfo(menu))
+	}
+
 	for _, menu := range levelMap[2] {
-		// 在roots中查找父节点
+		if menu.PageType == model.PageTypeButton {
+			continue
+		}
+		child := toInfo(menu)
+		secondMap[menu.Id] = child
 		for _, root := range roots {
 			if menu.ParentId == root.PageId {
-				child := &model.PageInfo{
-					PageId:    menu.Id,
-					PageLevel: menu.PageLevel,
-					PageName:  menu.PageName,
-					PagePath:  menu.Url,
-					ChildPage: make([]*model.PageInfo, 0),
-				}
 				root.ChildPage = append(root.ChildPage, child)
 				break
 			}
 		}
 	}
 
+	// 三级：按钮挂到二级菜单的 Buttons
+	for _, menu := range levelMap[3] {
+		btn := toInfo(menu)
+		if parent, ok := secondMap[menu.ParentId]; ok {
+			parent.Buttons = append(parent.Buttons, btn)
+		}
+	}
+
 	return roots
+}
+
+// CheckApiPermission 按按钮绑定的 API 校验权限；无对应按钮则放行（仅登录态）
+func (s *RbacService) CheckApiPermission(ctx context.Context, accountId int64, method, apiPath string) error {
+	account, err := s.dao.Rbac.GetAccountById(ctx, accountId)
+	if err != nil {
+		return err
+	}
+	if account.Status == model.AccountStatusDisable {
+		return apiErr.AccountDisabled
+	}
+	if account.AccountType == model.AccountTypeAdmin {
+		return nil
+	}
+
+	button, err := s.dao.Rbac.GetButtonByApi(ctx, method, apiPath)
+	if err != nil {
+		return err
+	}
+	if button == nil {
+		return nil
+	}
+
+	accountRole, err := s.GetUserRole(ctx, accountId)
+	if err != nil {
+		return err
+	}
+	if accountRole == nil {
+		return apiErr.RbacInvalidPermission
+	}
+
+	ok, err := s.dao.Rbac.ExistRolePage(ctx, accountRole.RoleId, button.Id)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return apiErr.RbacInvalidPermission
+	}
+	return nil
+}
+
+// GetMyButtons 当前账号拥有的按钮编码列表（含 page_id），供前端显隐
+func (s *RbacService) GetMyButtons(ctx context.Context, accountId int64) ([]*model.PageInfo, error) {
+	account, err := s.dao.Rbac.GetAccountById(ctx, accountId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pages []*model.Page
+	if account.AccountType == model.AccountTypeAdmin {
+		pages, err = s.dao.Rbac.GetAllPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		accountRole, err := s.GetUserRole(ctx, accountId)
+		if err != nil {
+			return nil, err
+		}
+		if accountRole == nil {
+			return []*model.PageInfo{}, nil
+		}
+		pageIds, err := s.getRoleAllPage(ctx, accountRole.RoleId)
+		if err != nil {
+			return nil, err
+		}
+		pages, err = s.dao.Rbac.GetAllPageByIds(ctx, pageIds)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	buttons := make([]*model.PageInfo, 0)
+	for _, p := range pages {
+		if p.PageType != model.PageTypeButton {
+			continue
+		}
+		buttons = append(buttons, &model.PageInfo{
+			PageId:     p.Id,
+			PageLevel:  p.PageLevel,
+			PageName:   p.PageName,
+			PagePath:   p.Url,
+			PageType:   p.PageType,
+			ButtonCode: p.ButtonCode,
+			ApiMethod:  p.ApiMethod,
+			ApiPath:    p.ApiPath,
+		})
+	}
+	return buttons, nil
 }
 
 func (s *RbacService) GetAllRole(ctx context.Context) ([]*model.Role, error) {
@@ -262,8 +419,8 @@ func (s *RbacService) GetAllPage(ctx context.Context) ([]*model.Page, error) {
 
 // ================================Rbac CURD=============================================//
 
-func (s *RbacService) GetRoleList(ctx context.Context, page model.Paging) (*model.BaseCrmResponse, error) {
-	result := &model.BaseCrmResponse{}
+func (s *RbacService) GetRoleList(ctx context.Context, page model.Paging) (*model.PageList, error) {
+	result := &model.PageList{}
 	data, total, err := s.dao.Rbac.GetRoleList(ctx, dao.Paging{Page: page.Page, Size: page.Size})
 	if err != nil {
 		return nil, err
@@ -317,6 +474,10 @@ func (s *RbacService) GetPageList(ctx context.Context, page model.Paging) (*mode
 				PageName:   menu.PageName,
 				Url:        menu.Url,
 				ParentId:   menu.ParentId,
+				PageType:   menu.PageType,
+				ButtonCode: menu.ButtonCode,
+				ApiMethod:  menu.ApiMethod,
+				ApiPath:    menu.ApiPath,
 				CreateTime: menu.CreateTime,
 			},
 			ParentName: parentName,
@@ -328,8 +489,63 @@ func (s *RbacService) GetPageList(ctx context.Context, page model.Paging) (*mode
 }
 
 func (s *RbacService) AddPage(ctx context.Context, page *model.Page) error {
-	page.CreateTime = time.Now().Unix()
-	return s.dao.Rbac.AddPage(ctx, page)
+	now := time.Now().Unix()
+	page.CreateTime = now
+	if page.PageType == 0 {
+		page.PageType = model.PageTypeMenu
+	}
+
+	// 显式创建按钮
+	if page.PageType == model.PageTypeButton {
+		if page.PageLevel == 0 {
+			page.PageLevel = 3
+		}
+		return s.dao.Rbac.AddPage(ctx, page)
+	}
+
+	if err := s.dao.Rbac.AddPage(ctx, page); err != nil {
+		return err
+	}
+
+	// 二级菜单且传了 api_prefix：自动挂默认 CRUD 按钮
+	if page.PageLevel == 2 && page.ApiPrefix != "" {
+		if err := s.createDefaultCRUDButtons(ctx, page.Id, page.ApiPrefix, now); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *RbacService) createDefaultCRUDButtons(ctx context.Context, parentId int64, apiPrefix string, now int64) error {
+	apiPrefix = strings.TrimRight(apiPrefix, "/")
+	defs := []struct {
+		Name   string
+		Code   string
+		Method string
+		Path   string
+	}{
+		{"查询", model.ButtonQuery, "GET", apiPrefix},
+		{"新增", model.ButtonCreate, "POST", apiPrefix},
+		{"修改", model.ButtonUpdate, "PUT", apiPrefix + "/:id"},
+		{"删除", model.ButtonDelete, "DELETE", apiPrefix + "/:id"},
+	}
+	for _, d := range defs {
+		btn := &model.Page{
+			PageName:   d.Name,
+			Url:        "",
+			ParentId:   parentId,
+			PageLevel:  3,
+			PageType:   model.PageTypeButton,
+			ButtonCode: d.Code,
+			ApiMethod:  d.Method,
+			ApiPath:    d.Path,
+			CreateTime: now,
+		}
+		if err := s.dao.Rbac.AddPage(ctx, btn); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *RbacService) ModifyPage(ctx context.Context, page *model.Page) error {
@@ -338,8 +554,42 @@ func (s *RbacService) ModifyPage(ctx context.Context, page *model.Page) error {
 	}
 	return nil
 }
+
 func (s *RbacService) DeletePage(ctx context.Context, id int64) error {
-	return s.dao.Rbac.DeletePage(ctx, id)
+	page, err := s.dao.Rbac.GetPageById(ctx, id)
+	if err != nil {
+		return err
+	}
+	if page == nil {
+		return nil
+	}
+
+	// 收集待删 id：自身 + 子节点（按钮）+ 若删一级则含二级及其按钮
+	deleteIds := []int64{id}
+	children, err := s.dao.Rbac.GetChildPages(ctx, id)
+	if err != nil {
+		return err
+	}
+	for _, child := range children {
+		deleteIds = append(deleteIds, child.Id)
+		grand, err := s.dao.Rbac.GetChildPages(ctx, child.Id)
+		if err != nil {
+			return err
+		}
+		for _, g := range grand {
+			deleteIds = append(deleteIds, g.Id)
+		}
+	}
+
+	if err := s.dao.Rbac.DeleteRolePageByPageIds(ctx, deleteIds); err != nil {
+		return err
+	}
+	for _, pid := range deleteIds {
+		if err := s.dao.Rbac.DeletePage(ctx, pid); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *RbacService) AddPageRole(ctx context.Context, request *model.RolePageRequest) error {
