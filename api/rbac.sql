@@ -1,4 +1,16 @@
 -- RBAC 建库脚本（新项目一次性执行）
+-- 权限全部走角色；无 account_type 旁路
+-- 用法：mysql -uroot < api/rbac.sql
+
+CREATE DATABASE IF NOT EXISTS `rbac` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `rbac`;
+
+DROP TABLE IF EXISTS `role_page`;
+DROP TABLE IF EXISTS `account_role`;
+DROP TABLE IF EXISTS `login_log`;
+DROP TABLE IF EXISTS `page`;
+DROP TABLE IF EXISTS `role`;
+DROP TABLE IF EXISTS `account`;
 
 CREATE TABLE `account` (
 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -6,7 +18,6 @@ CREATE TABLE `account` (
 `mobile` varchar(50) NOT NULL DEFAULT '' COMMENT '电话',
 `account_number` varchar(50) NOT NULL DEFAULT '' COMMENT '登录账号',
 `password` varchar(50) NOT NULL DEFAULT '' COMMENT '密码',
-`account_type` tinyint(4) NOT NULL DEFAULT 1 COMMENT '账户类型 1超级管理员',
 `status` tinyint(4) NOT NULL DEFAULT 1 COMMENT '账号状态 1启用 2禁用',
 `last_login_time` int(11) NOT NULL DEFAULT 0 COMMENT '最后一次登录时间',
 `opertion_id` int(11) NOT NULL DEFAULT 0 COMMENT '操作人',
@@ -73,24 +84,28 @@ KEY `idx_parent_id` (`parent_id`),
 KEY `idx_api` (`api_method`, `api_path`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1  DEFAULT CHARSET=utf8 COMMENT='页面菜单与按钮';
 
--- ========== 初始超级管理员（账号 admin / 密码 admin，password 为 MD5） ==========
-INSERT INTO `account` (`id`,`user_name`,`mobile`,`account_number`,`password`,`account_type`,`status`,`last_login_time`,`opertion_id`,`create_time`,`update_time`)
-VALUES (1, '管理员', '13800000000', 'admin', '21232f297a57a5a743894a0e4a801fc3', 1, 1, 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+-- ========== 初始角色：系统管理员 ==========
+INSERT INTO `role` (`id`,`role_name`,`create_time`)
+VALUES (1, '系统管理员', UNIX_TIMESTAMP());
+
+-- ========== 初始账号 admin / admin（password 为 MD5） ==========
+INSERT INTO `account` (`id`,`user_name`,`mobile`,`account_number`,`password`,`status`,`last_login_time`,`opertion_id`,`create_time`,`update_time`)
+VALUES (1, '管理员', '13800000000', 'admin', '21232f297a57a5a743894a0e4a801fc3', 1, 0, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+
+INSERT INTO `account_role` (`account_id`,`role_id`,`create_time`)
+VALUES (1, 1, UNIX_TIMESTAMP());
 
 -- ========== 初始菜单 + 默认 CRUD 按钮（api_path 需与 Gin FullPath 一致） ==========
 
--- 一级菜单：系统管理
 INSERT INTO `page` (`id`,`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`)
 VALUES (1, '系统管理', '/system', 0, 1, 1, '', '', '', UNIX_TIMESTAMP());
 
--- 二级菜单
 INSERT INTO `page` (`id`,`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
 (2, '账号管理', '/system/account', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
 (3, '角色管理', '/system/role', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
 (4, '页面管理', '/system/page', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
 (5, '登录日志', '/system/login-log', 1, 2, 1, '', '', '', UNIX_TIMESTAMP());
 
--- 账号管理 CRUD
 INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
 ('查询', '', 2, 3, 2, 'query',  'GET',    '/api/admin/account',     UNIX_TIMESTAMP()),
 ('新增', '', 2, 3, 2, 'create', 'POST',   '/api/admin/account',     UNIX_TIMESTAMP()),
@@ -99,7 +114,6 @@ INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`butt
 ('分配角色', '', 2, 3, 2, 'assign_role', 'POST',   '/api/admin/account/role', UNIX_TIMESTAMP()),
 ('移除角色', '', 2, 3, 2, 'remove_role', 'DELETE', '/api/admin/account/role', UNIX_TIMESTAMP());
 
--- 角色管理 CRUD + 角色页面分配
 INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
 ('查询', '', 3, 3, 2, 'query',  'GET',    '/api/admin/role',              UNIX_TIMESTAMP()),
 ('新增', '', 3, 3, 2, 'create', 'POST',   '/api/admin/role',              UNIX_TIMESTAMP()),
@@ -109,7 +123,6 @@ INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`butt
 ('查看角色页面', '', 3, 3, 2, 'role_page', 'GET', '/api/admin/role/page/:role_id', UNIX_TIMESTAMP()),
 ('分配角色页面', '', 3, 3, 2, 'role_page_assign', 'POST', '/api/admin/role/page', UNIX_TIMESTAMP());
 
--- 页面管理 CRUD
 INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
 ('查询', '', 4, 3, 2, 'query',  'GET',    '/api/admin/page',     UNIX_TIMESTAMP()),
 ('新增', '', 4, 3, 2, 'create', 'POST',   '/api/admin/page',     UNIX_TIMESTAMP()),
@@ -117,6 +130,9 @@ INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`butt
 ('删除', '', 4, 3, 2, 'delete', 'DELETE', '/api/admin/page/:id', UNIX_TIMESTAMP()),
 ('全部页面', '', 4, 3, 2, 'query_all', 'GET', '/api/admin/page/all', UNIX_TIMESTAMP());
 
--- 登录日志
 INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
 ('查询', '', 5, 3, 2, 'query', 'GET', '/api/admin/login/log', UNIX_TIMESTAMP());
+
+-- ========== 系统管理员拥有全部菜单与按钮 ==========
+INSERT INTO `role_page` (`role_id`,`page_id`)
+SELECT 1, `id` FROM `page`;

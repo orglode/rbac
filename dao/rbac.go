@@ -26,15 +26,28 @@ func (d *Rabc) GetAccountById(ctx context.Context, id int64) (*model.Account, er
 	return &account, nil
 }
 
-func (d *Rabc) GetAccountList(ctx context.Context, paging Paging) ([]*model.Account, int64, error) {
+func (d *Rabc) GetAccountList(ctx context.Context, query model.AccountQuery) ([]*model.Account, int64, error) {
 	var count int64
 	var result []*model.Account
+	paging := Paging{Page: query.Page, Size: query.Size}
+	paging.Normalize()
+
 	db := d.db.Slave(ctx).Table(model.AccountTable)
-	// 计算总数
+	if query.UserName != "" {
+		db = db.Where("user_name LIKE ?", "%"+query.UserName+"%")
+	}
+	if query.Mobile != "" {
+		db = db.Where("mobile LIKE ?", "%"+query.Mobile+"%")
+	}
+	if query.AccountNumber != "" {
+		db = db.Where("account_number LIKE ?", "%"+query.AccountNumber+"%")
+	}
+	if query.Status > 0 {
+		db = db.Where("status = ?", query.Status)
+	}
 	if err := db.Count(&count).Error; err != nil {
 		return nil, 0, err
 	}
-	// 查询数据
 	if err := db.Offset(paging.Offset()).Limit(paging.Size).Order("create_time DESC").Find(&result).Error; err != nil {
 		return nil, 0, err
 	}

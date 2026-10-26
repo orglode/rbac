@@ -33,7 +33,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
-			return conf.ConfGlobal.Server.JwtToken, nil
+			return []byte(conf.ConfGlobal.Server.JwtToken), nil
 		})
 
 		// 4. 处理JWT错误
@@ -144,7 +144,7 @@ func GenerateToken(uid int64) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	ss, err := token.SignedString(conf.ConfGlobal.Server.JwtToken)
+	ss, err := token.SignedString([]byte(conf.ConfGlobal.Server.JwtToken))
 	if err != nil {
 		return "", err
 	}

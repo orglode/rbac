@@ -103,6 +103,16 @@ type Paging struct {
 	Size int `json:"size" schema:"size"`
 }
 
+func (p *Paging) Normalize() {
+	if p.Page <= 0 {
+		p.Page = 1
+	}
+	if p.Size <= 0 {
+		p.Size = 20
+	}
+}
+
 func (p *Paging) Offset() int {
+	p.Normalize()
 	return (p.Page - 1) * p.Size
 }

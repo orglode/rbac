@@ -143,7 +143,7 @@ func adminLoginLogList(c *gin.Context) {
 
 // 用户列表
 func adminAccountList(c *gin.Context) {
-	req := model.Paging{}
+	req := model.AccountQuery{}
 	if err := c.ShouldBindQuery(&req); err != nil {
 		responseError(c, invalidParam)
 		return
@@ -305,7 +305,7 @@ func adminDelRole(c *gin.Context) {
 
 func adminPageList(c *gin.Context) {
 	ctx := c.Request.Context()
-	req := model.Paging{}
+	req := model.PageQuery{}
 	if err := c.ShouldBindQuery(&req); err != nil {
 		responseError(c, invalidParam)
 		return
@@ -316,7 +316,6 @@ func adminPageList(c *gin.Context) {
 		return
 	}
 	responseSuccess(c, data)
-
 }
 func adminPage(c *gin.Context) {
 	ctx := c.Request.Context()

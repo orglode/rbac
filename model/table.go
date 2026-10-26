@@ -32,8 +32,6 @@ type Account struct {
 	AccountNumber string `gorm:"column:account_number;type:varchar(50);unique_index:account_number;not null" json:"account_number" form:"account_number"`
 	// Password 密码
 	Password string `gorm:"column:password;type:varchar(50);not null" json:"password" form:"password"`
-	// AccountType 账户类型 // 1 超级管理员
-	AccountType int `gorm:"column:account_type;type:tinyint(4);not null" json:"account_type" form:"account_type"`
 	// Status 账号状态 1启用 2禁用
 	Status int `gorm:"column:status;type:tinyint(4);not null;default:1" json:"status" form:"status"`
 	// LastLoginTime 最后一次登录时间
@@ -88,11 +86,6 @@ type RolePage struct {
 const (
 	PageTypeMenu   = 1 // 菜单
 	PageTypeButton = 2 // 按钮
-)
-
-// 账户类型
-const (
-	AccountTypeAdmin = 1 // 超级管理员，跳过按钮鉴权
 )
 
 // 默认 CRUD 按钮编码

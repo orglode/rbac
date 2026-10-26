@@ -6,6 +6,8 @@
 # 依赖目录
 vendor/
 bin/
+frontend/node_modules/
+frontend/dist/
 
 # IDE配置
 .idea/

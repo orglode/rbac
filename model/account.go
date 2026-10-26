@@ -10,10 +10,24 @@ type AccountLoginResult struct {
 	Token         string `json:"token"`
 	UserName      string `json:"user_name"`
 	Mobile        string `json:"mobile"`
-	AccountType   int    `json:"account_type"`
+	AccountNumber string `json:"account_number"`
 	Status        int    `json:"status"`
 	LastLoginTime int64  `json:"last_login_time"`
 	CreateTime    int64  `json:"create_time"`
+}
+
+type AccountQuery struct {
+	Paging
+	UserName      string `json:"user_name" form:"user_name"`
+	Mobile        string `json:"mobile" form:"mobile"`
+	AccountNumber string `json:"account_number" form:"account_number"`
+	Status        int    `json:"status" form:"status"` // 0 不限；1启用 2禁用
+}
+
+type PageQuery struct {
+	Paging
+	PageName string `json:"page_name" form:"page_name"` // 名称模糊
+	Api      string `json:"api" form:"api"`             // api_method / api_path 模糊
 }
 
 type LoginLogQuery struct {

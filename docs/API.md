@@ -44,7 +44,7 @@
 1. 登录接口不做鉴权。
 2. 已登录后：若该 `METHOD + Gin FullPath` 在 `page` 中存在对应按钮，则角色必须拥有该按钮，否则 `602`。
 3. 库中无对应按钮的接口：仅校验登录（逐步挂按钮即可收紧）。
-4. `account_type = 1` 超级管理员：跳过按钮鉴权，菜单/按钮返回全量。
+4. 权限全部由角色控制，无账号类型旁路。
 5. 白名单（登录后免按钮校验）：`GET /api/admin/heath`、`GET /api/admin/me/menu`、`GET /api/admin/me/buttons`。
 
 **前端建议**
@@ -68,7 +68,7 @@
 }
 ```
 
-> 密码入库为 MD5；登录时对明文做 MD5 后再比对。初始账号见 `api/rbac.sql`：`admin` / `admin`（超管 `account_type=1`）。
+> 密码入库为 MD5；登录时对明文做 MD5 后再比对。初始账号见 `api/rbac.sql`：`admin` / `admin`，绑定角色「系统管理员」（全量权限）。
 
 **响应 data**
 
@@ -78,7 +78,8 @@
   "token": "jwt...",
   "user_name": "管理员",
   "mobile": "13800000000",
-  "account_type": 1,
+  "account_number": "admin",
+  "status": 1,
   "last_login_time": 0,
   "create_time": 1710000000
 }
@@ -158,7 +159,14 @@
 
 ### 3.1 列表
 
-`GET /api/admin/account?page=1&size=20`
+`GET /api/admin/account?page=1&size=20&user_name=&account_number=&mobile=&status=`
+
+| 参数 | 说明 |
+|------|------|
+| `user_name` | 姓名模糊 |
+| `account_number` | 账号模糊 |
+| `mobile` | 手机号模糊 |
+| `status` | `1`启用 `2`禁用；不传不限 |
 
 **响应 data**
 
@@ -171,7 +179,6 @@
       "mobile": "13800000000",
       "account_number": "zhangsan",
       "password": "",
-      "account_type": 0,
       "status": 1,
       "last_login_time": 0,
       "create_time": 1710000000,
@@ -190,7 +197,6 @@
   "mobile": "13800000001",
   "account_number": "zhangsan",
   "password": "123456",
-  "account_type": 0,
   "status": 1
 }
 ```
@@ -207,7 +213,6 @@
   "mobile": "13800000001",
   "account_number": "zhangsan",
   "password": "",
-  "account_type": 0,
   "status": 1
 }
 ```
@@ -289,11 +294,60 @@
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/admin/page?page=&size=` | 分页列表 |
-| GET | `/api/admin/page/all` | 全部（权限树用） |
+| GET | `/api/admin/page?page=&size=&page_name=&api=` | 一级分页树列表（1:N:N） |
+| GET | `/api/admin/page/all` | 全部扁平（权限树/父级下拉） |
 | POST | `/api/admin/page` | 新增菜单或按钮 |
 | PUT | `/api/admin/page/:id` | 修改 |
 | DELETE | `/api/admin/page/:id` | 删除（级联子节点与 role_page） |
+
+### 5.0 树形列表（一级→二级→按钮）
+
+`GET /api/admin/page?page=1&size=20&page_name=&api=`
+
+| 参数 | 说明 |
+|------|------|
+| `page` / `size` | 按**一级菜单**分页 |
+| `page_name` | 名称模糊；命中后带回关联上下级 |
+| `api` | 对 `api_method` / `api_path` 模糊匹配 |
+
+**响应 data**：`list` 为 `PageInfo[]` 树（与 `me/menu` 同结构：`child_page` + `buttons`），`total` 为一级菜单总数。
+
+```json
+{
+  "list": [
+    {
+      "page_id": 1,
+      "page_level": 1,
+      "page_name": "系统管理",
+      "page_path": "/system",
+      "page_type": 1,
+      "child_page": [
+        {
+          "page_id": 2,
+          "page_level": 2,
+          "page_name": "账号管理",
+          "page_path": "/system/account",
+          "page_type": 1,
+          "child_page": [],
+          "buttons": [
+            {
+              "page_id": 10,
+              "page_level": 3,
+              "page_name": "查询",
+              "page_type": 2,
+              "button_code": "query",
+              "api_method": "GET",
+              "api_path": "/api/admin/account",
+              "child_page": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "total": 1
+}
+```
 
 ### 5.1 新增一级/二级菜单
 
@@ -326,9 +380,9 @@
 }
 ```
 
-### 5.3 列表项字段
+### 5.3 全量扁平字段（`/page/all`）
 
-含：`id, page_name, url, parent_id, page_level, page_type, button_code, api_method, api_path, create_time, parent_name`。
+含：`id, page_name, url, parent_id, page_level, page_type, button_code, api_method, api_path, create_time`。
 
 ---
 
@@ -357,6 +411,17 @@
 
 ## 8. 初始化数据库
 
-执行 `api/rbac.sql`（含表结构 + 系统管理菜单与 CRUD 按钮种子数据）。
+全部初始化 SQL 只维护 `api/rbac.sql`（建库 `rbac` + 表 + 种子数据）：
 
-超级管理员请将账号 `account_type` 设为 `1`，以免按钮未绑角色时无法操作。
+```bash
+mysql -uroot < api/rbac.sql
+```
+
+| 种子 | 值 |
+|------|-----|
+| 数据库 | `rbac` |
+| `role` id=1 | 系统管理员，绑定全部 `page` |
+| `account` admin | 密码 `admin`（MD5） |
+| `account_role` | admin → 系统管理员 |
+
+权限只认角色，无 `account_type`。
