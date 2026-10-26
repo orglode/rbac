@@ -7,6 +7,7 @@ const viewLoaders: Record<string, () => Promise<{ default: Component }>> = {
   '/system/page': () => import('@/features/page/PageView.vue'),
   '/system/login-log': () => import('@/features/login-log/LoginLogView.vue'),
   '/system/operation-log': () => import('@/features/operation-log/OperationLogView.vue'),
+  '/system/message': () => import('@/features/message/MessageView.vue'),
 }
 
 export function resolveView(path: string) {

@@ -7,6 +7,8 @@ USE `rbac`;
 
 DROP TABLE IF EXISTS `role_page`;
 DROP TABLE IF EXISTS `account_role`;
+DROP TABLE IF EXISTS `site_message_inbox`;
+DROP TABLE IF EXISTS `site_message`;
 DROP TABLE IF EXISTS `operation_log`;
 DROP TABLE IF EXISTS `login_log`;
 DROP TABLE IF EXISTS `page`;
@@ -63,6 +65,33 @@ KEY `idx_operator_account` (`operator_account`),
 KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='操作日志';
 
+CREATE TABLE `site_message` (
+`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+`title` varchar(120) NOT NULL DEFAULT '' COMMENT '标题',
+`content` varchar(2000) NOT NULL DEFAULT '' COMMENT '内容',
+`msg_type` tinyint(4) NOT NULL DEFAULT 1 COMMENT '1系统广播 2业务通知 3指定用户',
+`biz_type` varchar(32) NOT NULL DEFAULT '' COMMENT '业务子类型编码',
+`sender_id` int(11) NOT NULL DEFAULT 0 COMMENT '发送人ID',
+`sender_name` varchar(50) NOT NULL DEFAULT '' COMMENT '发送人姓名',
+`create_time` int(11) NOT NULL DEFAULT 0 COMMENT '创建时间',
+PRIMARY KEY (`id`),
+KEY `idx_msg_type` (`msg_type`),
+KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='站内信';
+
+CREATE TABLE `site_message_inbox` (
+`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+`message_id` int(11) NOT NULL DEFAULT 0 COMMENT '站内信ID',
+`account_id` int(11) NOT NULL DEFAULT 0 COMMENT '接收人账号ID',
+`is_read` tinyint(4) NOT NULL DEFAULT 0 COMMENT '0未读 1已读',
+`read_time` int(11) NOT NULL DEFAULT 0 COMMENT '阅读时间',
+`create_time` int(11) NOT NULL DEFAULT 0 COMMENT '入箱时间',
+PRIMARY KEY (`id`),
+UNIQUE KEY `uk_message_account` (`message_id`,`account_id`),
+KEY `idx_account_read` (`account_id`,`is_read`),
+KEY `idx_message_id` (`message_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='站内信收件箱';
+
 CREATE TABLE `role` (
 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
 `role_name` varchar(50) NOT NULL DEFAULT '' COMMENT '角色名称',
@@ -91,6 +120,7 @@ KEY `idx_page_id` (`page_id`)
 CREATE TABLE `page` (
 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
 `page_name` varchar(50) NOT NULL DEFAULT '' COMMENT '菜单/按钮名称',
+`icon` varchar(64) NOT NULL DEFAULT '' COMMENT '菜单图标 Element Plus Icons 名，如 Setting',
 `url` varchar(255) NOT NULL DEFAULT '' COMMENT '前端路由',
 `parent_id` int(11) NOT NULL DEFAULT 0 COMMENT '父级id',
 `page_level` int(11) NOT NULL DEFAULT 0 COMMENT '1一级菜单 2二级菜单 3按钮',
@@ -119,15 +149,16 @@ VALUES (1, 1, UNIX_TIMESTAMP());
 
 -- ========== 初始菜单 + 默认 CRUD 按钮（api_path 需与 Gin FullPath 一致） ==========
 
-INSERT INTO `page` (`id`,`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`)
-VALUES (1, '系统管理', '/system', 0, 1, 1, '', '', '', UNIX_TIMESTAMP());
+INSERT INTO `page` (`id`,`page_name`,`icon`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`)
+VALUES (1, '系统管理', 'Setting', '/system', 0, 1, 1, '', '', '', UNIX_TIMESTAMP());
 
-INSERT INTO `page` (`id`,`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
-(2, '账号管理', '/system/account', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
-(3, '角色管理', '/system/role', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
-(4, '页面管理', '/system/page', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
-(5, '登录日志', '/system/login-log', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
-(6, '操作日志', '/system/operation-log', 1, 2, 1, '', '', '', UNIX_TIMESTAMP());
+INSERT INTO `page` (`id`,`page_name`,`icon`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
+(2, '账号管理', 'User', '/system/account', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
+(3, '角色管理', 'Avatar', '/system/role', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
+(4, '页面管理', 'Menu', '/system/page', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
+(5, '登录日志', 'Key', '/system/login-log', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
+(6, '操作日志', 'Document', '/system/operation-log', 1, 2, 1, '', '', '', UNIX_TIMESTAMP()),
+(7, '站内信', 'Bell', '/system/message', 1, 2, 1, '', '', '', UNIX_TIMESTAMP());
 
 INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
 ('查询', '', 2, 3, 2, 'query',  'GET',    '/api/admin/account',     UNIX_TIMESTAMP()),
@@ -158,6 +189,10 @@ INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`butt
 
 INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
 ('查询', '', 6, 3, 2, 'query', 'GET', '/api/admin/operation/log', UNIX_TIMESTAMP());
+
+INSERT INTO `page` (`page_name`,`url`,`parent_id`,`page_level`,`page_type`,`button_code`,`api_method`,`api_path`,`create_time`) VALUES
+('发送记录', '', 7, 3, 2, 'query',  'GET',  '/api/admin/message', UNIX_TIMESTAMP()),
+('发送消息', '', 7, 3, 2, 'create', 'POST', '/api/admin/message', UNIX_TIMESTAMP());
 
 -- ========== 系统管理员拥有全部菜单与按钮 ==========
 INSERT INTO `role_page` (`role_id`,`page_id`)

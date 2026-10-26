@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import type { MenuPage, PageInfo, Role } from '@/shared/types/api'
 import { formatUnix } from '@/shared/utils/time'
+import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import { useUserStore } from '@/stores/user'
 import { fetchAllPages } from '@/features/page/api'
 import {
@@ -151,7 +152,9 @@ onMounted(load)
 </script>
 
 <template>
-  <el-card shadow="never">
+  <div>
+    <PageBreadcrumb />
+    <el-card shadow="never">
     <div class="toolbar">
       <el-button v-if="can('create')" type="primary" @click="openCreate">新增</el-button>
       <el-button @click="load">刷新</el-button>
@@ -210,6 +213,7 @@ onMounted(load)
       </template>
     </el-dialog>
   </el-card>
+  </div>
 </template>
 
 <style scoped>

@@ -2,6 +2,9 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import type { MenuPage, PageInfo } from '@/shared/types/api'
+import IconPicker from '@/shared/components/IconPicker.vue'
+import MenuIcon from '@/shared/components/MenuIcon.vue'
+import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import { useUserStore } from '@/stores/user'
 import { createPage, deletePage, fetchAllPages, fetchPageList, updatePage } from './api'
 
@@ -12,6 +15,7 @@ const can = (code: string) => user.can(path, code)
 interface TreeRow {
   id: number
   page_name: string
+  icon?: string
   page_level: number
   page_type: number
   page_path: string
@@ -38,6 +42,7 @@ const formRef = ref<FormInstance>()
 const form = reactive({
   id: 0,
   page_name: '',
+  icon: '',
   url: '',
   parent_id: 0,
   page_level: 1,
@@ -68,6 +73,7 @@ function toTreeRow(node: PageInfo): TreeRow {
   return {
     id: node.page_id,
     page_name: node.page_name,
+    icon: node.icon,
     page_level: node.page_level,
     page_type: node.page_type,
     page_path: node.page_path,
@@ -116,6 +122,7 @@ function openCreate() {
   Object.assign(form, {
     id: 0,
     page_name: '',
+    icon: '',
     url: '',
     parent_id: 0,
     page_level: 1,
@@ -134,6 +141,7 @@ function openEdit(row: TreeRow) {
   Object.assign(form, {
     id: row.id,
     page_name: row.page_name,
+    icon: row.icon || '',
     url: row.page_path || '',
     parent_id: 0,
     page_level: row.page_level,
@@ -150,6 +158,7 @@ function openEdit(row: TreeRow) {
     if (self) {
       form.parent_id = self.parent_id
       form.sort = self.sort ?? row.sort ?? 0
+      form.icon = self.icon || row.icon || ''
     }
   })
   dialogVisible.value = true
@@ -170,6 +179,7 @@ async function submit() {
   await formRef.value?.validate()
   const payload: Record<string, unknown> = {
     page_name: form.page_name,
+    icon: form.page_level <= 2 ? form.icon : '',
     url: form.url,
     parent_id: form.parent_id,
     page_level: form.page_level,
@@ -204,7 +214,9 @@ onMounted(load)
 </script>
 
 <template>
-  <el-card shadow="never">
+  <div>
+    <PageBreadcrumb />
+    <el-card shadow="never">
     <div class="filter-panel">
       <el-form :model="query" inline class="filter-form" label-width="64px" @submit.prevent="onSearch">
         <el-form-item label="名称">
@@ -235,10 +247,18 @@ onMounted(load)
       :data="list"
       border
       row-key="id"
-      default-expand-all
       :tree-props="{ children: 'children' }"
     >
       <el-table-column prop="page_name" label="名称" min-width="180" />
+      <el-table-column label="图标" width="90">
+        <template #default="{ row }">
+          <div v-if="row.page_type === 1 && row.icon" class="icon-cell">
+            <MenuIcon :name="row.icon" :size="16" />
+            <span class="icon-code">{{ row.icon }}</span>
+          </div>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="层级" width="100">
         <template #default="{ row }">{{ levelLabel[row.page_level] || row.page_level }}</template>
       </el-table-column>
@@ -272,7 +292,7 @@ onMounted(load)
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="form.id ? '编辑页面' : '新增页面'" width="560px" destroy-on-close>
+    <el-dialog v-model="dialogVisible" :title="form.id ? '编辑页面' : '新增页面'" width="640px" destroy-on-close>
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="名称" prop="page_name">
           <el-input v-model="form.page_name" />
@@ -283,6 +303,9 @@ onMounted(load)
             <el-option :value="2" label="二级菜单" />
             <el-option :value="3" label="按钮" />
           </el-select>
+        </el-form-item>
+        <el-form-item v-if="form.page_level <= 2" label="菜单图标">
+          <IconPicker v-model="form.icon" />
         </el-form-item>
         <el-form-item v-if="form.page_level > 1" label="父级">
           <el-select v-model="form.parent_id" style="width: 100%" filterable>
@@ -327,6 +350,7 @@ onMounted(load)
       </template>
     </el-dialog>
   </el-card>
+  </div>
 </template>
 
 <style scoped>
@@ -340,5 +364,17 @@ onMounted(load)
   color: #909399;
   font-size: 12px;
   line-height: 1.4;
+}
+.icon-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.icon-code {
+  color: #909399;
+  font-size: 12px;
+}
+.icon-cell :deep(.menu-icon) {
+  margin-right: 2px;
 }
 </style>

@@ -14,6 +14,7 @@ export interface PageInfo {
   page_id: number
   page_level: number
   page_name: string
+  icon?: string
   page_path: string
   page_type: number
   button_code?: string
@@ -64,6 +65,7 @@ export interface Role {
 export interface MenuPage {
   id: number
   page_name: string
+  icon?: string
   url: string
   parent_id: number
   page_level: number

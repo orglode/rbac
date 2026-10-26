@@ -45,7 +45,7 @@
 2. 已登录后：若该 `METHOD + Gin FullPath` 在 `page` 中存在对应按钮，则角色必须拥有该按钮，否则 `602`。
 3. 库中无对应按钮的接口：仅校验登录（逐步挂按钮即可收紧）。
 4. 权限全部由角色控制，无账号类型旁路。
-5. 白名单（登录后免按钮校验）：`GET /api/admin/heath`、`GET /api/admin/me/menu`、`GET /api/admin/me/buttons`。
+5. 白名单（登录后免按钮校验）：`GET /api/admin/me/menu`、`GET /api/admin/me/buttons`；健康检查 `GET /api/admin/health` 无需登录。
 
 **前端建议**
 
@@ -396,6 +396,7 @@
 ```json
 {
   "page_name": "账号管理",
+  "icon": "User",
   "url": "/system/account",
   "parent_id": 1,
   "page_level": 2,
@@ -406,6 +407,7 @@
 ```
 
 - `page_type` 默认 `1`（菜单）。
+- `icon`：菜单图标，存 `@element-plus/icons-vue` 组件名（如 `Setting`、`User`），一级/二级菜单可用；按钮可空。
 - `sort`：展示排序，**数字越大越靠前**；相同时按 `create_time` 倒序（默认 0）。
 - 二级菜单且传入 `api_prefix` 时，**自动创建** 查询/新增/修改/删除 四个按钮（level=3）。
 - `api_prefix` 不入库，仅创建时使用。
@@ -426,19 +428,46 @@
 
 ### 5.3 全量扁平字段（`/page/all`）
 
-含：`id, page_name, url, parent_id, page_level, page_type, button_code, api_method, api_path, sort, create_time`。
+含：`id, page_name, icon, url, parent_id, page_level, page_type, button_code, api_method, api_path, sort, create_time`。
 
 列表/菜单树统一按 `sort DESC, create_time DESC` 排序。
 
 ---
 
-## 6. 健康检查
+## 6. 站内信
 
-`GET /api/admin/heath`（需登录，免按钮权限）
+消息类型：`1` 系统广播（全员） / `2` 业务通知（可指定人或默认全员，`biz_type` 可选） / `3` 指定用户（`account_ids` 必填）。  
+收件箱行含已读状态；发送时为每位接收人写入 `site_message_inbox`。
+
+| 方法 | 路径 | 说明 | 鉴权 |
+|------|------|------|------|
+| GET | `/api/admin/message/unread-count` | 未读数 `{ count }` | 登录白名单 |
+| GET | `/api/admin/message/inbox/recent` | 最近未读（顶栏） | 登录白名单 |
+| GET | `/api/admin/message/inbox?page=&size=&msg_type=&read_status=` | 我的收件箱；`read_status` 0不限/1未读/2已读 | 登录白名单 |
+| POST | `/api/admin/message/read` | 标已读 `{ inbox_ids:[], all:false }` | 登录白名单 |
+| GET | `/api/admin/message` | 发送记录（含已读/接收数） | 按钮 query |
+| POST | `/api/admin/message` | 发送 `{ title, content, msg_type, biz_type?, account_ids? }` | 按钮 create |
+
+菜单：`/system/message`（站内信）。
 
 ---
 
-## 7. 错误码一览
+## 7. 健康检查
+
+`GET /api/admin/health`（公开，无需登录）
+
+**响应 data**
+
+```json
+{ "time": 1710000000, "ip": "127.0.0.1" }
+```
+
+- `time`：服务端当前 Unix 时间戳
+- `ip`：请求客户端 IP
+
+---
+
+## 8. 错误码一览
 
 | code | 说明 |
 |------|------|
@@ -455,7 +484,7 @@
 
 ---
 
-## 8. 初始化数据库
+## 9. 初始化数据库
 
 全部初始化 SQL 只维护 `api/rbac.sql`（建库 `rbac` + 表 + 种子数据）：
 

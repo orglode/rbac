@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"rbac/conf"
-	"rbac/server/http"
+	httpserver "rbac/server/http"
 	"rbac/service"
 	"time"
 
@@ -30,6 +30,6 @@ func main() {
 	// 初始化service
 	svc := service.NewService(cfg)
 
-	// 初始化http控件
-	http.Init(svc, cfg)
+	// 初始化http服务
+	httpserver.Init(svc, cfg)
 }

@@ -66,6 +66,7 @@ type PageInfo struct {
 	PageId     int64       `json:"page_id"`
 	PageLevel  int         `json:"page_level"`
 	PageName   string      `json:"page_name"`
+	Icon       string      `json:"icon,omitempty"`
 	PagePath   string      `json:"page_path"`
 	PageType   int         `json:"page_type"`
 	ButtonCode string      `json:"button_code,omitempty"`

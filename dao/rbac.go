@@ -152,7 +152,7 @@ func (d *Rabc) GetAllPageByIds(ctx context.Context, roleIds []int64) ([]*model.P
 func (d *Rabc) UpdatePage(ctx context.Context, page *model.Page) error {
 	// Select 显式字段，保证 sort=0 也能更新
 	db := d.db.Master(ctx).Table(model.RbacPageTable).Where("id=?", page.Id).
-		Select("page_name", "url", "parent_id", "page_level", "page_type", "button_code", "api_method", "api_path", "sort").
+		Select("page_name", "icon", "url", "parent_id", "page_level", "page_type", "button_code", "api_method", "api_path", "sort").
 		Updates(page)
 	if err := db.Error; err != nil {
 		return err

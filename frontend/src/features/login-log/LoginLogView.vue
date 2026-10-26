@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import type { LoginLog } from '@/shared/types/api'
 import { formatUnix } from '@/shared/utils/time'
+import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import { fetchLoginLogs } from './api'
 
 const loading = ref(false)
@@ -40,7 +41,9 @@ onMounted(load)
 </script>
 
 <template>
-  <el-card shadow="never">
+  <div>
+    <PageBreadcrumb />
+    <el-card shadow="never">
     <div class="filter-panel">
       <el-form :model="query" inline class="filter-form" label-width="64px" @submit.prevent="onSearch">
         <el-form-item label="账号">
@@ -92,6 +95,7 @@ onMounted(load)
       />
     </div>
   </el-card>
+  </div>
 </template>
 
 <style scoped>

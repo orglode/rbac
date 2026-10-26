@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import type { OperationLog } from '@/shared/types/api'
 import { formatUnix } from '@/shared/utils/time'
+import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import { fetchOperationLogs } from './api'
 
 const moduleOptions = [
@@ -100,7 +101,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-card shadow="never">
+  <div>
+    <PageBreadcrumb />
+    <el-card shadow="never">
     <el-tabs v-model="activeModule" class="module-tabs" @tab-change="onTabChange">
       <el-tab-pane
         v-for="item in moduleOptions"
@@ -182,6 +185,7 @@ onMounted(() => {
       />
     </div>
   </el-card>
+  </div>
 </template>
 
 <style scoped>

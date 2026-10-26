@@ -1,149 +1,34 @@
 package http
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"net/http"
-	error2 "rbac/api/error"
+	"time"
+
 	"rbac/conf"
 	"rbac/model"
+	"rbac/server/common"
 	"rbac/service"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	logger "github.com/orglode/hades/logger_v2"
 	"github.com/orglode/hades/trace"
 )
 
-var (
-	svc          *service.Service
-	invalidParam = error2.MissingParameter // 参数错误
-)
-
-func Init(s *service.Service, conf *conf.Config) {
-	svc = s
-	router := gin.New()
-
-	//禁用调式终端颜色
+// Init 初始化引擎、注册路由并启动 HTTP 服务
+func Init(s *service.Service, cfg *conf.Config) {
+	r := gin.New()
 	gin.DisableConsoleColor()
-
-	//判断环境 是否开启debug模式
-	if conf.Server.Env == model.EnvProduction {
+	if cfg.Server.Env == model.EnvProduction {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	// 注册trace中间件
-	router.Use(trace.TraceIDMiddleware())
-
-	// gin日志模式
-	router.Use(logger.GinLogger())
-
-	// 报错输出中间件
-	router.Use(ErrorHandlerMiddleware())
-
-	// gin恢复模式
-	router.Use(gin.Recovery())
-
-	// 初始化路由
-	initRouter(router)
-
-	// 启动服务
-	router.Run(conf.Server.Addr)
+	r.Use(trace.TraceIDMiddleware(), logger.GinLogger(), common.ErrorHandlerMiddleware(), gin.Recovery())
+	initRouter(r, s)
+	_ = r.Run(cfg.Server.Addr)
 }
 
-// ================================================================//
-
-// ErrorHandlerMiddleware 错误处理中间件
-func ErrorHandlerMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Next()
-		if len(c.Errors) > 0 {
-			err := c.Errors.Last().Err
-			var appErr *error2.AppError
-			if errors.As(err, &appErr) {
-				responseError(c, appErr)
-			} else {
-				// 非业务错误，包装为内部错误，不改动全局 InternalError
-				responseError(c, &error2.AppError{
-					Code:    error2.InternalError.Code,
-					Message: error2.InternalError.Message,
-					Err:     err,
-				})
-			}
-			return
-		}
-	}
-}
-
-// ResponseSuccess 成功响应
-func responseSuccess(c *gin.Context, data interface{}) {
-	apiSuccess := error2.Success
-	c.JSON(http.StatusOK, model.HttpResponse{
-		Code:    apiSuccess.Code,
-		Message: apiSuccess.Message,
-		Data:    data,
-		TraceId: c.GetString("trace_id"),
+func health(c *gin.Context) {
+	common.ResponseSuccess(c, gin.H{
+		"time": time.Now().Unix(),
+		"ip":   c.ClientIP(),
 	})
-}
-
-// ResponseError 错误响应
-func responseError(c *gin.Context, apiErr *error2.AppError) {
-	if apiErr == nil {
-		apiErr = error2.InternalError
-	}
-	errMsg := apiErr.Message
-	// 测试环境下附带底层错误，便于排查
-	if apiErr.Err != nil && conf.ConfGlobal.Server.Env == model.EnvTest {
-		errMsg = fmt.Sprintf("%s: %v", errMsg, apiErr.Err)
-	}
-
-	c.JSON(http.StatusOK, model.HttpResponse{
-		Code:    apiErr.Code,
-		Message: errMsg,
-		Data:    nil,
-		TraceId: c.GetString("trace_id"),
-	})
-}
-
-func standardOutput(c *gin.Context, err error) {
-	_ = c.Error(err)
-}
-
-// getInt 获取整数参数
-func getInt(c *gin.Context, key string) int {
-	valStr := c.Param(key)
-	val, err := strconv.Atoi(valStr)
-	if err != nil {
-		return 0
-	}
-	return val
-}
-
-// getInt 获取整数参数
-func getInt64(c *gin.Context, key string) int64 {
-	valStr := c.Param(key)
-	val, err := strconv.ParseInt(valStr, 10, 64)
-	if err != nil {
-		return 0
-	}
-	return val
-}
-
-// getUserId 获取用户ID
-func withOperator(c *gin.Context) context.Context {
-	return context.WithValue(c.Request.Context(), model.CtxOperatorID, getUid(c))
-}
-
-func getUid(c *gin.Context) int64 {
-	// 从上下文中获取用户ID，具体实现依赖于你的认证中间件
-	val, exists := c.Get("uid")
-	if !exists {
-		return 0
-	}
-	userId, ok := val.(int64)
-	if !ok {
-		return 0
-	}
-	return userId
 }

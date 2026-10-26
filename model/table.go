@@ -1,13 +1,15 @@
 package model
 
 const (
-	AccountTable         = "account"
-	LoginLogTable        = "login_log"
-	OperationLogTable    = "operation_log"
-	RbacRoleTable        = "role"
-	RbacPageTable        = "page"
-	RbacRolePageTable    = "role_page"
-	RbacAccountRoleTable = "account_role"
+	AccountTable          = "account"
+	LoginLogTable         = "login_log"
+	OperationLogTable     = "operation_log"
+	SiteMessageTable      = "site_message"
+	SiteMessageInboxTable = "site_message_inbox"
+	RbacRoleTable         = "role"
+	RbacPageTable         = "page"
+	RbacRolePageTable     = "role_page"
+	RbacAccountRoleTable  = "account_role"
 )
 
 // 账号状态
@@ -133,6 +135,8 @@ type Page struct {
 	Id int64 `gorm:"column:id;type:int(11);primary_key;not null;auto_increment" json:"id" form:"id"`
 	// PageName 菜单/按钮名称
 	PageName string `gorm:"column:page_name;type:varchar(50);not null" json:"page_name" form:"page_name"`
+	// Icon 菜单图标（Element Plus Icons 组件名，如 Setting / User）
+	Icon string `gorm:"column:icon;type:varchar(64);not null;default:''" json:"icon" form:"icon"`
 	// Url 前端路由（菜单用）
 	Url string `gorm:"column:url;type:varchar(255);not null" json:"url" form:"url"`
 	// 父级id

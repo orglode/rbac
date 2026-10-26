@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import type { Account, Role } from '@/shared/types/api'
 import { formatUnix } from '@/shared/utils/time'
+import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 import { useUserStore } from '@/stores/user'
 import {
   assignAccountRole,
@@ -162,7 +163,9 @@ onMounted(load)
 </script>
 
 <template>
-  <el-card shadow="never">
+  <div>
+    <PageBreadcrumb />
+    <el-card shadow="never">
     <div class="filter-panel">
       <el-form :model="query" inline class="filter-form" label-width="64px" @submit.prevent="onSearch">
         <el-form-item label="姓名">
@@ -263,6 +266,7 @@ onMounted(load)
       </template>
     </el-dialog>
   </el-card>
+  </div>
 </template>
 
 <style scoped>

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useUserStore } from '@/stores/user'
 import defaultAvatar from '@/assets/default-avatar.svg'
+import PageBreadcrumb from '@/shared/components/PageBreadcrumb.vue'
 
 const user = useUserStore()
 
@@ -9,32 +10,35 @@ const displayRole = computed(() => user.roleName || user.profile?.role_name || '
 </script>
 
 <template>
-  <el-card shadow="never" class="profile-card">
-    <template #header>
-      <span>用户资料</span>
-    </template>
+  <div>
+    <PageBreadcrumb />
+    <el-card shadow="never" class="profile-card">
+      <template #header>
+        <span>用户资料</span>
+      </template>
 
-    <div class="profile-body">
-      <el-avatar :size="96" :src="defaultAvatar" class="avatar" />
-      <el-descriptions :column="1" border class="desc">
-        <el-descriptions-item label="姓名">
-          {{ user.profile?.user_name || '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="账号">
-          {{ user.profile?.account_number || '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="手机号">
-          {{ user.profile?.mobile || '-' }}
-        </el-descriptions-item>
-        <el-descriptions-item label="角色">
-          <el-tag type="primary" effect="plain">{{ displayRole }}</el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="用户 ID">
-          {{ user.profile?.id ?? '-' }}
-        </el-descriptions-item>
-      </el-descriptions>
-    </div>
-  </el-card>
+      <div class="profile-body">
+        <el-avatar :size="96" :src="defaultAvatar" class="avatar" />
+        <el-descriptions :column="1" border class="desc">
+          <el-descriptions-item label="姓名">
+            {{ user.profile?.user_name || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="账号">
+            {{ user.profile?.account_number || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="手机号">
+            {{ user.profile?.mobile || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="角色">
+            <el-tag type="primary" effect="plain">{{ displayRole }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="用户 ID">
+            {{ user.profile?.id ?? '-' }}
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
+    </el-card>
+  </div>
 </template>
 
 <style scoped>

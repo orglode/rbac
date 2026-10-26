@@ -310,6 +310,7 @@ func (s *RbacService) buildMenuTreeV2(menus []*model.Page) []*model.PageInfo {
 			PageId:     menu.Id,
 			PageLevel:  menu.PageLevel,
 			PageName:   menu.PageName,
+			Icon:       menu.Icon,
 			PagePath:   menu.Url,
 			PageType:   menu.PageType,
 			ButtonCode: menu.ButtonCode,

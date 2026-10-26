@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowDown, Fold, Expand, SwitchButton, User } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { resetDynamicRoutes } from '@/app/router'
+import HeaderMessageBell from '@/shared/components/HeaderMessageBell.vue'
+import MenuIcon from '@/shared/components/MenuIcon.vue'
 import defaultAvatar from '@/assets/default-avatar.svg'
 
 const route = useRoute()
@@ -13,44 +15,6 @@ const collapsed = ref(false)
 
 const activeMenu = computed(() => (route.meta.menuPath as string) || route.path)
 const displayRole = computed(() => user.roleName || user.profile?.role_name || '未分配角色')
-
-interface Crumb {
-  title: string
-  path?: string
-}
-
-const breadcrumbs = computed<Crumb[]>(() => {
-  const crumbs: Crumb[] = [{ title: '首页', path: '/dashboard' }]
-  const current = (route.meta.menuPath as string) || route.path
-
-  if (current === '/dashboard' || route.name === 'dashboard') {
-    return crumbs
-  }
-  if (route.name === 'profile') {
-    crumbs.push({ title: '用户资料', path: '/profile' })
-    return crumbs
-  }
-
-  for (const top of user.menus) {
-    for (const child of top.child_page || []) {
-      if (child.page_path === current) {
-        crumbs.push({ title: top.page_name })
-        crumbs.push({ title: child.page_name, path: child.page_path })
-        return crumbs
-      }
-    }
-  }
-
-  const title = (route.meta.title as string) || '当前页'
-  crumbs.push({ title })
-  return crumbs
-})
-
-function onCrumbClick(item: Crumb) {
-  if (item.path && item.path !== route.path) {
-    router.push(item.path)
-  }
-}
 
 function onUserCommand(cmd: string) {
   if (cmd === 'profile') {
@@ -86,10 +50,12 @@ function onLogout() {
           active-text-color="#409eff"
         >
           <el-menu-item index="/dashboard">
+            <MenuIcon name="Odometer" />
             <span>首页</span>
           </el-menu-item>
           <el-sub-menu v-for="top in user.menus" :key="top.page_id" :index="top.page_path || String(top.page_id)">
             <template #title>
+              <MenuIcon :name="top.icon" fallback="Folder" />
               <span>{{ top.page_name }}</span>
             </template>
             <el-menu-item
@@ -97,7 +63,8 @@ function onLogout() {
               :key="child.page_id"
               :index="child.page_path"
             >
-              {{ child.page_name }}
+              <MenuIcon :name="child.icon" fallback="Document" />
+              <span>{{ child.page_name }}</span>
             </el-menu-item>
           </el-sub-menu>
         </el-menu>
@@ -111,18 +78,9 @@ function onLogout() {
             <Fold v-if="!collapsed" />
             <Expand v-else />
           </el-icon>
-          <el-breadcrumb separator="/">
-            <el-breadcrumb-item v-for="(item, idx) in breadcrumbs" :key="`${item.title}-${idx}`">
-              <a
-                v-if="item.path && idx < breadcrumbs.length - 1"
-                href="javascript:;"
-                @click.prevent="onCrumbClick(item)"
-              >{{ item.title }}</a>
-              <span v-else class="crumb-current">{{ item.title }}</span>
-            </el-breadcrumb-item>
-          </el-breadcrumb>
         </div>
         <div class="header-right">
+          <HeaderMessageBell />
           <el-dropdown trigger="click" @command="onUserCommand">
             <div class="user-entry">
               <el-avatar :size="32" :src="defaultAvatar" />
@@ -184,17 +142,6 @@ function onLogout() {
 .collapse-btn {
   cursor: pointer;
   font-size: 18px;
-}
-.crumb-current {
-  color: #303133;
-  font-weight: 500;
-}
-:deep(.el-breadcrumb__inner a) {
-  font-weight: 400;
-  color: #909399;
-}
-:deep(.el-breadcrumb__inner a:hover) {
-  color: #409eff;
 }
 .header-right {
   display: flex;
