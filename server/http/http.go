@@ -1,8 +1,6 @@
 package http
 
 import (
-	"time"
-
 	"rbac/conf"
 	"rbac/model"
 	"rbac/server/common"
@@ -24,11 +22,4 @@ func Init(s *service.Service, cfg *conf.Config) {
 	r.Use(trace.TraceIDMiddleware(), logger.GinLogger(), common.ErrorHandlerMiddleware(), gin.Recovery())
 	initRouter(r, s)
 	_ = r.Run(cfg.Server.Addr)
-}
-
-func health(c *gin.Context) {
-	common.ResponseSuccess(c, gin.H{
-		"time": time.Now().Unix(),
-		"ip":   c.ClientIP(),
-	})
 }

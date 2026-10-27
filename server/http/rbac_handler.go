@@ -17,44 +17,6 @@ func NewRbacHandler(svc *service.Service) *RbacHandler {
 	return &RbacHandler{svc: svc}
 }
 
-func (h *RbacHandler) RegisterPublic(r *gin.Engine) {
-	r.POST("/api/admin/login", h.Login)
-}
-
-func (h *RbacHandler) Register(rg *gin.RouterGroup) {
-	// 当前用户
-	rg.GET("me/menu", h.MyMenu)
-	rg.GET("me/buttons", h.MyButtons)
-
-	// 账号
-	rg.GET("account", h.AccountList)
-	rg.POST("account", h.AccountCreate)
-	rg.PUT("account/:id", h.AccountUpdate)
-	rg.DELETE("account/:id", h.AccountDelete)
-	rg.POST("account/role", h.AccountAssignRole)
-	rg.DELETE("account/role", h.AccountRemoveRole)
-
-	// 角色
-	rg.GET("role", h.RoleList)
-	rg.GET("role/all", h.RoleAll)
-	rg.POST("role", h.RoleCreate)
-	rg.PUT("role/:id", h.RoleUpdate)
-	rg.DELETE("role/:id", h.RoleDelete)
-	rg.GET("role/page/:role_id", h.RolePageList)
-	rg.POST("role/page", h.RoleAssignPages)
-
-	// 页面
-	rg.GET("page", h.PageList)
-	rg.GET("page/all", h.PageAll)
-	rg.POST("page", h.PageCreate)
-	rg.PUT("page/:id", h.PageUpdate)
-	rg.DELETE("page/:id", h.PageDelete)
-
-	// 日志
-	rg.GET("login/log", h.LoginLogList)
-	rg.GET("operation/log", h.OperationLogList)
-}
-
 func (h *RbacHandler) Login(c *gin.Context) {
 	var req struct {
 		AccountNumber string `json:"account_number"`

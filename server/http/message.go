@@ -17,17 +17,6 @@ func NewMessageHandler(svc *service.Service) *MessageHandler {
 	return &MessageHandler{svc: svc}
 }
 
-func (h *MessageHandler) Register(rg *gin.RouterGroup) {
-	// 收件箱 / 未读：白名单，登录即可
-	rg.GET("message/unread-count", h.UnreadCount)
-	rg.GET("message/inbox/recent", h.InboxRecent)
-	rg.GET("message/inbox", h.Inbox)
-	rg.POST("message/read", h.Read)
-	// 发送与发送记录：需按钮权限
-	rg.GET("message", h.List)
-	rg.POST("message", h.Send)
-}
-
 func (h *MessageHandler) UnreadCount(c *gin.Context) {
 	count, err := h.svc.RbacService.GetUnreadMessageCount(c.Request.Context(), common.GetUid(c))
 	if err != nil {
