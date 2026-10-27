@@ -20,6 +20,7 @@ var (
 	RbacMobileExists         = &AppError{Code: 603, Message: "手机号已存在"}
 	LoginPassWord            = &AppError{Code: 604, Message: "账号密码错误"}
 	AccountDisabled          = &AppError{Code: 605, Message: "账号已禁用"}
+	RbacRoleHasAccounts      = &AppError{Code: 606, Message: "该角色下仍有关联账号，无法删除"}
 )
 
 type AppError struct {

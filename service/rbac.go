@@ -494,15 +494,28 @@ func (s *RbacService) ModifyRole(ctx context.Context, role *model.Role) error {
 }
 
 func (s *RbacService) DeleteRole(ctx context.Context, roleId int64) error {
-	name := ""
-	if old, err := s.dao.Rbac.GetRoleById(ctx, roleId); err == nil && old != nil {
-		name = old.RoleName
+	old, err := s.dao.Rbac.GetRoleById(ctx, roleId)
+	if err != nil {
+		return apiErr.RbacRoleNotFound
+	}
+
+	cnt, err := s.dao.Rbac.CountAccountByRoleId(ctx, roleId)
+	if err != nil {
+		return err
+	}
+	if cnt > 0 {
+		return apiErr.RbacRoleHasAccounts
+	}
+
+	// 清空该角色菜单权限，再删角色本身
+	if err := s.dao.Rbac.DeletePageRole(ctx, roleId); err != nil {
+		return err
 	}
 	if err := s.dao.Rbac.DeleteRole(ctx, roleId); err != nil {
 		return err
 	}
-	s.writeOpLog(ctx, model.OpModuleRole, model.OpActionDelete, "role", roleId, name,
-		fmt.Sprintf("删除角色「%s」", name))
+	s.writeOpLog(ctx, model.OpModuleRole, model.OpActionDelete, "role", roleId, old.RoleName,
+		fmt.Sprintf("删除角色「%s」，并清空其菜单权限", old.RoleName))
 	return nil
 }
 

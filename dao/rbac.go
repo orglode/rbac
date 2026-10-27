@@ -305,6 +305,14 @@ func (d *Rabc) DeleteRole(ctx context.Context, id int64) error {
 	return nil
 }
 
+// CountAccountByRoleId 统计绑定该角色的账号数
+func (d *Rabc) CountAccountByRoleId(ctx context.Context, roleId int64) (int64, error) {
+	var count int64
+	err := d.db.Slave(ctx).Table(model.RbacAccountRoleTable).
+		Where("role_id=?", roleId).Count(&count).Error
+	return count, err
+}
+
 func (d *Rabc) GetAccountRoleByAccountId(ctx context.Context, id int64) (*model.AccountRole, error) {
 	data := &model.AccountRole{}
 	db := d.db.Slave(ctx).Table(model.RbacAccountRoleTable).Where("account_id=?", id).First(&data)
